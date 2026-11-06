@@ -1,0 +1,3187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Birthday Annu! 🎂🎉 | Annu's Birthday Express</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --clr-primary: #c471ed;
+      --clr-primary-dk: #8b2fc9;
+      --clr-primary-lt: #e8a0ff;
+      --clr-accent: #f64f59;
+      --clr-gold: #FFD23F;
+      --clr-green: #A8E010;
+      --clr-green-dk: #73A000;
+      --clr-ink: #1E1F2E;
+      --clr-cream: #FFF8EC;
+      --clr-panel: #2a2e38;
+      --clr-panel-dk: #1a1e28;
+      --font-display: 'Baloo 2', cursive;
+      --font-body: 'Nunito', sans-serif;
+    }
+
+    /* ============================================================
+       BASE RESET
+    ============================================================ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: var(--font-body);
+      color: var(--clr-ink);
+      background: #FFE7A0;
+      touch-action: none;
+    }
+
+    #game-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ============================================================
+       HUD — TOP LEFT
+    ============================================================ */
+    #top-left-hud {
+      position: fixed;
+      top: 12px;
+      left: 16px;
+      z-index: 5;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hud-distance {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, .6);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .hud-fuel {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fuel-icon {
+      font-size: 26px;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, .6);
+      line-height: 1;
+      margin-top: -4px;
+    }
+
+    .fuel-bar-bg {
+      width: 160px;
+      height: 22px;
+      background: #111;
+      border: 3px solid #fff;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 2px 2px 0 rgba(0, 0, 0, .6);
+    }
+
+    .fuel-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--clr-green), var(--clr-green-dk));
+      transform-origin: left;
+      transition: transform .1s linear;
+    }
+
+    /* ============================================================
+       DIALS — BOTTOM CENTER
+    ============================================================ */
+    #dials-wrap {
+      position: fixed;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       CONTROLS — GAS & BRAKE BUTTONS
+    ============================================================ */
+    #gas-btn,
+    #brake-btn {
+      position: fixed;
+      bottom: 20px;
+      z-index: 6;
+      width: 100px;
+      height: 130px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #E8E8E8, #A3A3A3);
+      border: 4px solid #333;
+      box-shadow: inset 0 4px 10px rgba(255, 255, 255, .7), inset 0 -6px 15px rgba(0, 0, 0, .4),
+        0 8px 0 #555, 0 12px 20px rgba(0, 0, 0, .6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 12px;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 20px;
+      color: #333;
+      text-shadow: 1px 1px 0 rgba(255, 255, 255, .6);
+      user-select: none;
+      cursor: pointer;
+      transition: transform .06s, box-shadow .06s;
+    }
+
+    #gas-btn {
+      right: 30px;
+    }
+
+    #brake-btn {
+      left: 30px;
+    }
+
+    #gas-btn::before,
+    #brake-btn::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      bottom: 40px;
+      background-image: radial-gradient(circle, #444 30%, transparent 35%);
+      background-size: 24px 24px;
+      opacity: .35;
+    }
+
+    #gas-btn:active,
+    #gas-btn.pressed,
+    #brake-btn:active,
+    #brake-btn.pressed {
+      transform: translateY(8px);
+      box-shadow: inset 0 2px 5px rgba(255, 255, 255, .7), inset 0 -4px 10px rgba(0, 0, 0, .4),
+        0 0 0 #555, 0 4px 10px rgba(0, 0, 0, .6);
+    }
+
+    .hint {
+      position: fixed;
+      left: 150px;
+      bottom: 36px;
+      z-index: 6;
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 12px;
+      color: #fff;
+      background: rgba(30, 31, 46, .55);
+      border-radius: 10px;
+      padding: 6px 10px;
+      backdrop-filter: blur(2px);
+    }
+
+    #mute-btn {
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      z-index: 6;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--clr-ink);
+      border: 2px solid rgba(255, 255, 255, .15);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* ============================================================
+       OVERLAY BASE
+    ============================================================ */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, rgba(196, 113, 237, .5), rgba(30, 31, 46, .85) 70%);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--clr-panel), var(--clr-panel-dk));
+      border: 4px solid #333;
+      border-radius: 24px;
+      padding: 24px 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .8);
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      margin: auto;
+      color: #fff;
+    }
+
+    .card.wide {
+      max-width: 680px;
+    }
+
+    .card h1 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      margin: 6px 0;
+      color: #fff;
+      line-height: 1.15;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .card p.sub {
+      margin: 0 0 18px;
+      font-weight: 800;
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    /* ============================================================
+       MAIN MENU (HCR-STYLE)
+    ============================================================ */
+    #main-menu-overlay {
+      background: radial-gradient(circle at center, var(--clr-panel) 0%, var(--clr-panel-dk) 100%);
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .menu-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 16px 24px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #222, #111);
+      border-bottom: 4px solid #333;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .5);
+      z-index: 10;
+    }
+
+    .menu-coins {
+      display: none !important;
+    }
+
+    .menu-header {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .menu-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: none;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .menu-content.active {
+      display: block;
+    }
+
+    .menu-bottom-tabs {
+      display: flex;
+      background: #222;
+      border-top: 4px solid #111;
+      height: 70px;
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, .5);
+      z-index: 10;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .menu-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      border-right: 2px solid #111;
+      border-top: 4px solid transparent;
+      cursor: pointer;
+      background: linear-gradient(180deg, #333, #222);
+      transition: background .1s, color .1s;
+    }
+
+    .menu-tab:active {
+      background: #222;
+    }
+
+    .menu-tab.active {
+      background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dk));
+      color: #fff;
+      border-top: 4px solid var(--clr-primary-lt);
+    }
+
+    .menu-start-btn {
+      flex: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, var(--clr-green), var(--clr-green-dk));
+      color: #111;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: inset 0 4px 10px rgba(255, 255, 255, .4), inset 0 -4px 10px rgba(0, 0, 0, .2);
+      border-top: 4px solid #C8F030;
+    }
+
+    .menu-start-btn:active {
+      background: var(--clr-green-dk);
+    }
+
+    /* ============================================================
+       STAGE SELECTION BUTTONS
+    ============================================================ */
+    .mode-toggle {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stage-btn {
+      flex: 1;
+      min-width: 140px;
+      background: linear-gradient(180deg, #333, #222);
+      border: 2px solid #444;
+      border-radius: 16px;
+      padding: 20px 10px;
+      color: #fff;
+      cursor: pointer;
+      transition: transform .1s, box-shadow .1s;
+      text-align: center;
+    }
+
+    .stage-btn:hover:not(.locked) {
+      transform: scale(1.05);
+    }
+
+    .stage-btn:active:not(.locked) {
+      transform: scale(0.95);
+    }
+
+    .stage-btn.active {
+      background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dk));
+      border-color: var(--clr-primary-lt);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(139, 47, 201, .4);
+    }
+
+    .stage-btn .stage-emoji {
+      font-size: 36px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .stage-btn .stage-name {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      text-shadow: 1px 1px 0 rgba(0, 0, 0, .5);
+    }
+
+    .stage-btn.locked {
+      opacity: .6;
+      filter: grayscale(.8);
+      cursor: not-allowed;
+    }
+
+    .stage-btn.locked .stage-name::after {
+      content: " 🔒";
+    }
+
+    /* ============================================================
+       VEHICLE CAROUSEL
+    ============================================================ */
+    .vehicle-carousel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, .05);
+      border-radius: 24px;
+      border: 2px solid rgba(255, 255, 255, .1);
+      position: relative;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 40px;
+      cursor: pointer;
+      opacity: .7;
+      transition: opacity .2s, transform .2s;
+      padding: 10px;
+      z-index: 2;
+    }
+
+    .nav-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .nav-btn:active {
+      transform: scale(0.9);
+    }
+
+    .carousel-center {
+      flex: 1;
+      text-align: center;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    #carousel-canvas {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      aspect-ratio: 2/1;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 10px 10px rgba(0, 0, 0, .5));
+    }
+
+    .carousel-center .vname {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000;
+      margin-top: 10px;
+    }
+
+    .carousel-center .vblurb {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 15px;
+      min-height: 40px;
+    }
+
+    .stats-box {
+      background: rgba(0, 0, 0, .4);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 800;
+      width: 60px;
+      color: #aaa;
+      letter-spacing: .3px;
+      text-align: left;
+    }
+
+    .stat-bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, .1);
+      overflow: hidden;
+    }
+
+    .stat-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--clr-primary), var(--clr-primary-dk));
+      transition: width .3s;
+    }
+
+    .unlock-btn {
+      width: 100%;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(180deg, var(--clr-gold), #FF8C42);
+      color: #111;
+      box-shadow: 0 4px 0 #C98E00;
+      transition: transform .1s;
+    }
+
+    .unlock-btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .unlock-btn.selected {
+      background: linear-gradient(180deg, var(--clr-green), var(--clr-green-dk));
+      box-shadow: 0 4px 0 #4A6B00;
+      cursor: default;
+    }
+
+    .unlock-btn.selected:active {
+      transform: none;
+      box-shadow: 0 4px 0 #4A6B00;
+    }
+
+    /* ============================================================
+       BUTTONS (SHARED)
+    ============================================================ */
+    .go-btn {
+      margin-top: 18px;
+      width: 100%;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 22px;
+      background: linear-gradient(180deg, var(--clr-green), var(--clr-green-dk));
+      color: #111;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 10px;
+      box-shadow: inset 0 4px 10px rgba(255, 255, 255, .4), inset 0 -4px 10px rgba(0, 0, 0, .2), 0 4px 0 #4A6B00;
+      cursor: pointer;
+      transition: transform .08s, box-shadow .08s;
+      letter-spacing: 1px;
+    }
+
+    .go-btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+      background: var(--clr-green-dk);
+    }
+
+    .ghost-btn {
+      margin-top: 10px;
+      width: 100%;
+      background: linear-gradient(180deg, #333, #222);
+      color: #fff;
+      border: 2px solid #555;
+      border-radius: 12px;
+      padding: 12px;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #111;
+    }
+
+    .ghost-btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+      background: #222;
+    }
+
+    /* ============================================================
+       ACHIEVEMENT BADGES
+    ============================================================ */
+    #achievements-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin: 10px 0 0;
+    }
+
+    .badge-chip {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 11.5px;
+      background: linear-gradient(180deg, #FFF3C4, var(--clr-gold));
+      color: #4a3200;
+      border-radius: 999px;
+      padding: 6px 12px;
+      box-shadow: 0 2px 0 #C98E00;
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATION
+    ============================================================ */
+    #gift-toast {
+      position: fixed;
+      top: 82px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-14px);
+      z-index: 7;
+      max-width: 82vw;
+      background: var(--clr-ink);
+      border-radius: 14px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+      padding: 11px 18px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      text-align: center;
+      opacity: 0;
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events: none;
+    }
+
+    #gift-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ============================================================
+       MESSAGE RECAP (inside overlays)
+    ============================================================ */
+    #messages-recap,
+    #timeup-messages {
+      text-align: left;
+      max-height: 140px;
+      overflow-y: auto;
+      background: transparent;
+      border-radius: 12px;
+      padding: 5px;
+      margin: 14px 0 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ddd;
+    }
+
+    #messages-recap div,
+    #timeup-messages div {
+      margin: 4px 0;
+    }
+
+    #messages-recap:empty,
+    #timeup-messages:empty {
+      display: none;
+    }
+
+    /* ============================================================
+       CONFETTI CANVAS
+    ============================================================ */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      z-index: 19;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       MID-RIDE MESSAGE OVERLAY
+    ============================================================ */
+    #message-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      z-index: 9000;
+      background: rgba(10, 10, 20, .75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: msgFadeIn .4s ease forwards;
+    }
+
+    @keyframes msgFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .msg-card {
+      position: relative;
+      max-width: 480px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(196, 113, 237, .18) 0%, rgba(255, 255, 255, .04) 100%);
+      border: 2px solid rgba(196, 113, 237, .5);
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .7), inset 0 0 40px rgba(196, 113, 237, .08);
+      animation: msgSlideUp .45s cubic-bezier(.22, .68, 0, 1.2) forwards;
+      color: #fff;
+      text-align: center;
+    }
+
+    @keyframes msgSlideUp {
+      from {
+        transform: translateY(40px) scale(.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .msg-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #c471ed, #8b2fc9);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(196, 113, 237, .5);
+    }
+
+    .msg-icon {
+      font-size: 52px;
+      margin-bottom: 14px;
+      line-height: 1;
+      animation: iconPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.12);
+      }
+    }
+
+    .msg-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(196, 113, 237, .8);
+      margin-bottom: 8px;
+    }
+
+    .msg-text {
+      font-family: var(--font-body);
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.65;
+      color: #f0f0f0;
+      margin-bottom: 28px;
+    }
+
+    .msg-continue-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #c471ed, #8b2fc9);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 6px 20px rgba(196, 113, 237, .5), 0 0 0 0 rgba(196, 113, 237, .4);
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      animation: btnGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes btnGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 6px 20px rgba(196, 113, 237, .4);
+      }
+
+      50% {
+        box-shadow: 0 6px 28px rgba(196, 113, 237, .8);
+      }
+    }
+
+    .msg-continue-btn:active {
+      transform: scale(.96);
+    }
+
+    /* ============================================================
+       LETTERS OVERLAY
+    ============================================================ */
+    #letters-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      z-index: 10000;
+      background: rgba(10, 10, 20, .95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    .letter-card {
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: linear-gradient(135deg, rgba(196, 113, 237, .15), rgba(255, 255, 255, .05));
+      border: 2px solid rgba(196, 113, 237, .4);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, .5), inset 0 0 30px rgba(196, 113, 237, .1);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.7;
+      text-align: center;
+      position: absolute;
+      transition: transform .6s cubic-bezier(.4, 0, .2, 1), opacity .6s ease;
+      opacity: 0;
+      transform: rotateY(90deg) scale(.8);
+      pointer-events: none;
+    }
+
+    .letter-card.active {
+      opacity: 1;
+      transform: rotateY(0) scale(1);
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .letter-card.prev {
+      transform: rotateY(-90deg) scale(.8);
+    }
+
+    .letter-controls {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      z-index: 10001;
+    }
+
+    .letter-btn {
+      background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dk));
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 12px 30px;
+      font-weight: 800;
+      font-family: var(--font-display);
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(196, 113, 237, .5);
+      transition: transform .2s, filter .2s;
+    }
+
+    .letter-btn:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.2);
+    }
+
+    .letter-btn:active {
+      transform: translateY(1px);
+    }
+
+    .letter-btn:disabled {
+      background: #555;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    /* ============================================================
+       ORIENTATION LOCK
+    ============================================================ */
+    #orientation-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      background: #1e1f2e;
+      color: #fff;
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 24px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    @media screen and (max-width: 768px) and (orientation: portrait) {
+      #orientation-overlay {
+        display: flex;
+      }
+    }
+
+    /* ============================================================
+       RESPONSIVE TWEAKS
+    ============================================================ */
+    @media (max-width: 520px) {
+      .menu-top-bar {
+        padding: 12px 16px;
+      }
+
+      .menu-header {
+        font-size: 22px;
+      }
+
+      .menu-bottom-tabs {
+        height: 60px;
+      }
+
+      .menu-tab {
+        font-size: 14px;
+      }
+
+      .stage-btn {
+        min-width: 110px;
+        padding: 12px 6px;
+      }
+
+      .stage-btn .stage-emoji {
+        font-size: 28px;
+      }
+
+      .stage-btn .stage-name {
+        font-size: 16px;
+      }
+
+      .vehicle-carousel {
+        flex-direction: column;
+        padding: 15px 5px;
+        margin: 10px auto;
+      }
+
+      .carousel-center {
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-btn {
+        position: absolute;
+        top: 35%;
+        transform: translateY(-50%);
+        font-size: 36px;
+        padding: 5px;
+      }
+
+      #prev-vehicle-btn {
+        left: 0;
+      }
+
+      #next-vehicle-btn {
+        right: 0;
+      }
+
+      #gas-btn {
+        width: 90px;
+        height: 90px;
+        right: 18px;
+        bottom: 24px;
+      }
+
+      #brake-btn {
+        width: 66px;
+        height: 66px;
+        right: 112px;
+        bottom: 32px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .card h1 {
+        font-size: 22px;
+      }
+    }
+
+    @media (max-height: 480px) {
+      .menu-top-bar {
+        padding: 4px 16px;
+      }
+
+      .menu-header {
+        font-size: 18px;
+      }
+
+      .menu-bottom-tabs {
+        height: 44px;
+      }
+
+      .menu-tab {
+        font-size: 13px;
+      }
+
+      .menu-start-btn {
+        font-size: 18px;
+        border-top-width: 2px;
+      }
+
+      .vehicle-carousel {
+        margin: 4px auto;
+        padding: 10px;
+      }
+
+      #carousel-canvas {
+        max-width: 140px;
+        margin-bottom: -10px;
+      }
+
+      .carousel-center .vname {
+        font-size: 18px;
+        margin-top: 4px;
+      }
+
+      .carousel-center .vblurb {
+        font-size: 11px;
+        min-height: 16px;
+        margin-bottom: 4px;
+      }
+
+      .stats-box {
+        padding: 4px 10px;
+        margin-bottom: 6px;
+      }
+
+      .stat-row {
+        margin: 2px 0;
+      }
+
+      .unlock-btn {
+        padding: 6px;
+        font-size: 14px;
+      }
+    }
+
+    /* ============================================================
+       ANIMATIONS
+    ============================================================ */
+    @keyframes flicker {
+      0% {
+        transform: scale(1) rotate(-2deg);
+      }
+
+      100% {
+        transform: scale(1.12) rotate(3deg);
+      }
+    }
+
+    .flame-flicker {
+      display: inline-block;
+      animation: flicker .35s infinite alternate ease-in-out;
+      transform-origin: 50% 90%;
+    }
+
+    /* ============================================================
+       NEWSPAPER OVERLAY (THE DAILY ANNU)
+    ============================================================ */
+    .news-overlay {
+      background: rgba(10, 10, 20, 0.85);
+      backdrop-filter: blur(5px);
+      align-items: flex-start;
+      overflow-y: auto;
+      padding: 40px 10px;
+    }
+
+    .news-paper {
+      background: #F4F1EA;
+      background-image: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)" opacity="0.04"/%3E%3C/svg%3E');
+      max-width: 550px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 30px;
+      border-radius: 4px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(150, 130, 100, 0.1);
+      color: #1a1a1a;
+      font-family: 'Nunito', sans-serif;
+      position: relative;
+    }
+
+    .news-paper::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      pointer-events: none;
+    }
+
+    .news-topbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #1a1a1a;
+      border-top: 2px solid #1a1a1a;
+      padding: 5px 0;
+      margin-bottom: 15px;
+    }
+
+    .news-masthead {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.5rem, 9vw, 4rem);
+      line-height: 1;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      margin-bottom: 15px;
+      color: #111;
+    }
+
+    .news-separator {
+      border: 0;
+      border-bottom: 4px double #1a1a1a;
+      margin: 0 0 20px 0;
+    }
+
+    .news-headline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 6vw, 2.5rem);
+      line-height: 1.1;
+      text-align: center;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .news-subhead {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #444;
+    }
+
+    .news-stats {
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      padding: 15px 0;
+      margin-bottom: 25px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .news-gifts {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: 'Playfair Display', serif;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .news-gifts span {
+      color: #555;
+      font-size: 1rem;
+    }
+
+    .news-read-btn {
+      background: #111;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 15px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s;
+    }
+
+    .news-read-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .news-footer-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .news-secondary-btn {
+      flex: 1;
+      background: transparent;
+      border: 2px solid #111;
+      color: #111;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      padding: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .news-secondary-btn:active {
+      background: #eee;
+    }
+
+    @media (max-width: 480px) {
+      .news-paper {
+        padding: 20px 15px;
+      }
+
+      .news-topbar {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Orientation lock -->
+  <div id="orientation-overlay">
+    <div style="font-size:60px;margin-bottom:20px;">🔄</div>
+    <div>Please rotate your device to landscape mode!</div>
+  </div>
+
+  <!-- Game canvas -->
+  <div id="game-wrap"><canvas id="game"></canvas></div>
+  <canvas id="confetti-canvas" class="hidden"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="top-left-hud">
+      <div class="hud-distance"><span id="distance-val">0m / 0m</span></div>
+      <div class="hud-fuel">
+        <div class="fuel-icon">⛽</div>
+        <div class="fuel-bar-bg">
+          <div id="fuel-fill" class="fuel-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="dials-wrap" class="hidden"><canvas id="dials-canvas" width="300" height="150"></canvas></div>
+  <div id="mute-btn" class="hidden" title="Toggle sound">🔊</div>
+  <div id="brake-btn" class="hidden">BRAKE</div>
+  <div id="gas-btn" class="hidden">GAS</div>
+  <div class="hint hidden" id="keyhint">→ / SPACE gas · ← brake</div>
+  <div id="gift-toast" class="hidden"></div>
+
+  <!-- ══════════════════════════════════════════
+       BOARDING PASS OVERLAY
+  ══════════════════════════════════════════ -->
+  <div class="overlay" id="boarding-pass-overlay" style="z-index:50;background:#111;overflow-y:auto;display:flex;padding:20px 0;box-sizing:border-box;">
+    <div
+      style="margin:auto;background:#FFF8EC;width:90%;max-width:500px;border-radius:12px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.8);border:4px solid #333;flex-shrink:0;margin-top:auto;margin-bottom:auto;">
+      <div
+        style="background:linear-gradient(135deg,#c471ed,#f64f59);color:#fff;padding:20px;text-align:center;font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;border-bottom:4px dashed #333;">
+        ANNU'S BIRTHDAY EXPRESS 🎂
+      </div>
+      <div style="padding:20px;color:#333;font-weight:800;display:flex;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;color:#888;">PASSENGER</div>
+          <div style="font-size:20px;font-family:'Baloo 2',cursive;">ANNU 👑</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:#888;">FROM</div>
+          <div style="font-size:20px;font-family:'Baloo 2',cursive;color:#f64f59;">DEEPAK 💜</div>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;color:#333;font-weight:800;">
+        <div style="font-size:12px;color:#888;">DESTINATION</div>
+        <div style="font-size:22px;font-family:'Baloo 2',cursive;color:#8b2fc9;">THE BIRTHDAY GALA & TREATS 🍰🎉</div>
+      </div>
+      <div style="background:#E8E8E8;padding:20px;text-align:center;border-top:4px dashed #333;">
+        <button class="go-btn" id="takeoff-btn" style="margin-top:0;">Chal Shuru Kar! 🚗💨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MAIN MENU OVERLAY (HCR-STYLE)
+  ══════════════════════════════════════════ -->
+  <div class="overlay" id="main-menu-overlay">
+    <div class="menu-top-bar">
+      <div class="menu-coins">🪙 <span id="menu-coin-val">0</span></div>
+      <div class="menu-header" id="menu-header-text">VEHICLE</div>
+    </div>
+
+    <!-- Stage Tab -->
+    <div id="menu-content-stage" class="menu-content">
+      <div class="card wide" style="background:transparent;box-shadow:none;padding-top:0;">
+        <h1 style="color:#fff;text-shadow:2px 2px 0 #000;">Choose Your Stage</h1>
+        <div class="mode-toggle" id="level-row" style="margin-bottom:30px;"></div>
+      </div>
+    </div>
+
+    <!-- Vehicle Tab -->
+    <div id="menu-content-vehicle" class="menu-content active">
+      <div class="vehicle-carousel">
+        <button class="nav-btn" id="prev-vehicle-btn">◀</button>
+        <div class="carousel-center">
+          <canvas id="carousel-canvas" width="300" height="150"></canvas>
+          <div class="vname" id="carousel-vname">Vehicle Name</div>
+          <div class="vblurb" id="carousel-vblurb">Blurb</div>
+          <div class="stats-box">
+            <div class="stat-row">
+              <div class="stat-label">SPEED</div>
+              <div class="stat-bar">
+                <div class="stat-fill" id="stat-speed"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">GRIP</div>
+              <div class="stat-bar">
+                <div class="stat-fill" id="stat-grip"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">BOUNCE</div>
+              <div class="stat-bar">
+                <div class="stat-fill" id="stat-bounce"></div>
+              </div>
+            </div>
+          </div>
+          <button class="unlock-btn" id="carousel-action-btn">SELECT</button>
+        </div>
+        <button class="nav-btn" id="next-vehicle-btn">▶</button>
+      </div>
+    </div>
+
+    <div class="menu-bottom-tabs">
+      <div class="menu-tab" id="tab-stage">STAGE</div>
+      <div class="menu-tab active" id="tab-vehicle">VEHICLE</div>
+      <div class="menu-start-btn" id="start-btn">START</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FINISH OVERLAY — "THE DAILY ANNU"
+  ══════════════════════════════════════════ -->
+  <div class="overlay hidden news-overlay" id="finish-overlay">
+    <div class="news-paper">
+
+      <div class="news-topbar">
+        <span>Vol. Birthday Edition • 2026</span>
+        <span>Deepak ki taraf se, dil se 💜</span>
+        <span>TODAY</span>
+      </div>
+
+      <div class="news-masthead">THE DAILY ANNU 👑</div>
+      <hr class="news-separator">
+
+      <div class="news-headline" id="finish-title">ANNU KA BIRTHDAY H! DEEPAK NE GAME BANA DIYA 🎂🎮</div>
+      <div class="news-subhead" id="finish-msg">Pichle saal jo banaya tha wo de nahi paya tha... is saal poora game bana ke bharpai kar di h! Happy Birthday Annu! 😂💜</div>
+
+      <div class="news-stats" id="finish-stats">
+        <div class="news-gifts">
+          🎁 <b id="final-candles">0</b> <span>/</span> <b id="final-total">0</b>
+          <span style="font-size: 14px; font-weight: 800; text-transform: uppercase; color: #111;">Birthday Surprises Collected</span>
+        </div>
+        <div id="achievements-row"
+          style="width: 100%; display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:10px;"></div>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 25px;">
+        <div
+          style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.2rem; margin-bottom: 10px; text-transform: uppercase;">
+          Deepak ke messages:</div>
+        <div id="messages-recap" style="background: transparent; padding: 0; color: #333; font-style: italic;"></div>
+      </div>
+
+      <button id="open-letters-btn" class="news-read-btn"
+        style="background:linear-gradient(180deg,#c471ed,#8b2fc9); color:#fff; box-shadow:0 6px 0 #5a1a8a; animation:flicker 1.5s infinite alternate ease-in-out; border-radius:8px;">
+        💌 DEEPAK KE LETTERS PADH 💌
+      </button>
+
+      <div class="news-footer-btns">
+        <button id="replay-btn" class="news-secondary-btn">RIDE AGAIN 🔁</button>
+        <button id="finish-switch-btn" class="news-secondary-btn">🔧 Switch Vehicle</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Letters Overlay -->
+  <div class="overlay hidden" id="letters-overlay">
+    <div id="letters-container" style="position:relative;width:100%;display:flex;justify-content:center;"></div>
+    <div class="letter-controls">
+      <button class="letter-btn" id="btn-prev-letter">⬅ Prev</button>
+      <button class="letter-btn" id="btn-next-letter">Next ➡</button>
+    </div>
+  </div>
+
+  <!-- Time's Up Overlay -->
+  <div class="overlay hidden" id="timeup-overlay">
+    <div class="card">
+      <h1>⏰ Out of Party Fuel!</h1>
+      <p class="sub" id="timeup-sub"></p>
+      <div id="timeup-messages"></div>
+      <button class="go-btn" id="timeup-retry-btn">RETRY THE RIDE 🔁</button>
+      <button class="ghost-btn" id="timeup-switch-btn">🔧 Switch Vehicle</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MID-RIDE MESSAGE OVERLAY (injected via JS)
+  ══════════════════════════════════════════ -->
+  <div id="message-overlay" class="hidden">
+    <div class="msg-card">
+      <div class="msg-badge" id="msg-badge">Birthday Wish #1</div>
+      <div class="msg-icon" id="msg-icon">🎂</div>
+      <div class="msg-title" id="msg-title">Deepak bol rha h...</div>
+      <p class="msg-text" id="msg-text">...</p>
+      <button class="msg-continue-btn" id="msg-continue-btn">Aage Chal! 🚗💜</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GAME SCRIPT
+  ═══════════════════════════════════════════════════════════ -->
+  <script>
+    (function () {
+      "use strict";
+
+      // ============================================================
+      // §1  CANVAS & RESIZE
+      // ============================================================
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      let W, H, DPR;
+
+      function resize() {
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * DPR; canvas.height = H * DPR;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // ============================================================
+      // §2  TERRAIN GENERATION
+      // ============================================================
+      const GROUND_BASE_RATIO = 0.60;
+      const seedA = Math.random() * 1000;
+      const seedB = Math.random() * 1000;
+      const seedC = Math.random() * 1000;
+      let levelAmpMult = 1;
+      let levelSeedShift = 0;
+
+      function terrainY(x) {
+        const base = H * GROUND_BASE_RATIO;
+        const a = levelAmpMult;
+        return base
+          + 46 * a * Math.sin(x * 0.0028 + seedA + levelSeedShift)
+          + 26 * a * Math.sin(x * 0.0065 + seedB + levelSeedShift)
+          + 60 * a * Math.sin(x * 0.0011 + seedC + levelSeedShift)
+          + 14 * a * Math.sin(x * 0.014);
+      }
+      function terrainSlope(x) {
+        const d = 2;
+        return (terrainY(x + d) - terrainY(x - d)) / (2 * d);
+      }
+
+      const START_X = 40;
+      let FINISH_X = 12000;
+
+      // ============================================================
+      // §3  LEVEL DEFINITIONS
+      // ============================================================
+      const LEVELS = [
+        { id: 'beginning', name: 'How It All Started 🌸', emoji: '🌸', finishX: 12000, ampMult: 0.65, seedShift: 0 },
+        { id: 'adventures', name: 'The Bestie Adventures 🌴', emoji: '🌴', finishX: 18000, ampMult: 1.35, seedShift: 7.2, isJungle: true },
+        { id: 'hardships', name: 'Overcoming The Drama 🌋', emoji: '🌋', finishX: 18000, ampMult: 1.8, seedShift: 9.5, isVolcano: true },
+        { id: 'chill', name: 'Chill Vibes & Gossip ❄️', emoji: '❄️', finishX: 18000, ampMult: 1.2, seedShift: 8.8, isSnow: true },
+        { id: 'dreams', name: 'Reach for the Stars 🌕', emoji: '🌕', finishX: 20000, ampMult: 1.5, seedShift: 12.1, isMoon: true },
+        { id: 'journey', name: 'The Grand Celebration 🌈', emoji: '🌈', finishX: 26000, ampMult: 1.4, seedShift: 4.4, isJourney: true }
+      ];
+      const unlockedLevels = new Set(LEVELS.map(l => l.id));
+      let selectedLevelId = 'beginning';
+
+      // ============================================================
+      // §4  VEHICLE DEFINITIONS
+      // ============================================================
+      const VEHICLES = [
+        {
+          id: 'annu_car', name: "Annu's Royal Cruiser 👑",
+          color: '#c471ed', dark: '#8b2fc9', bodyStyle: 'nano',
+          wheelR: 10, wheelBase: 58, accel: 0.50, maxSpeed: 12, reverseSpeed: 4,
+          grip: 0.8, bounce: 0.25, cost: 0,
+          blurb: 'Khas Annu ke liye banayi h — purple & gold, speed bhi full aur style bhi! 💜👑',
+          stats: { speed: 0.80, grip: 0.60, bounce: 0.40 },
+          spriteYOffset: 1.19, spriteXOffset: -0.16, bodyWidthMult: 2.73,
+          bodyImgSrc: 'assets/captain_car_body.png', flipX: true, openTop: true, driverPos: { x: 6, y: -22 }
+        },
+        {
+          id: 'buggy', name: 'Birthday Buggy 🎈',
+          color: '#FF6F59', dark: '#B23A2A', bodyStyle: 'buggy',
+          wheelR: 15, wheelBase: 52, accel: 0.42, maxSpeed: 11, reverseSpeed: 4,
+          grip: 1.0, bounce: 0.28, cost: 0,
+          blurb: 'Classic buggy — thodi bouncy h par road pe pakad achhi h! 🎈',
+          stats: { speed: 0.60, grip: 0.65, bounce: 0.50 },
+          bodyImgSrc: 'assets/buggy-body.png', wheelImgSrc: 'assets/buggy-wheel.png', spriteYOffset: 1.2, openTop: true, driverPos: { x: -2, y: -24 }
+        },
+        {
+          id: 'fast_car', name: 'Party Sprinter 🏎️',
+          color: '#a0a0a0', dark: '#505050', bodyStyle: 'sport',
+          wheelR: 14, wheelBase: 56, accel: 0.65, maxSpeed: 15, reverseSpeed: 5,
+          grip: 0.8, bounce: 0.20, cost: 0,
+          blurb: 'Retro speed racer — seedha cake cutting ceremony pe rukegi! 🎂',
+          stats: { speed: 0.95, grip: 0.50, bounce: 0.30 },
+          bodyImgSrc: 'assets/fast_car-body.png', wheelImgSrc: 'assets/fast_car-wheel.png', spriteYOffset: 1.1
+        },
+        {
+          id: 'carantula', name: 'Party Crawler 🚜',
+          color: '#FF8C00', dark: '#8B4500', bodyStyle: 'monster',
+          wheelR: 18, wheelBase: 60, accel: 0.35, maxSpeed: 10, reverseSpeed: 3.5,
+          grip: 1.5, bounce: 0.20, cost: 0,
+          blurb: 'This beast climbs over any hill to deliver birthday gifts on time.',
+          stats: { speed: 0.40, grip: 1.00, bounce: 0.20 },
+          bodyImgSrc: 'assets/carantula-body.png', wheelImgSrc: 'assets/carantula-wheel.png', spriteYOffset: 2.2
+        },
+        {
+          id: 'monster', name: 'Confetti Crusher 🎉',
+          color: '#2E8B57', dark: '#1E5E3A', bodyStyle: 'monster',
+          wheelR: 24, wheelBase: 66, accel: 0.33, maxSpeed: 9, reverseSpeed: 3.4,
+          grip: 1.35, bounce: 0.40, cost: 0,
+          blurb: 'Massive wheels shrug off every bump — crushing bad vibes into pure confetti!',
+          stats: { speed: 0.35, grip: 0.85, bounce: 0.60 },
+          bodyImgSrc: 'assets/monster-body.png', wheelImgSrc: 'assets/monster-wheel.png', spriteYOffset: 1.4
+        },
+        {
+          id: 'sport', name: 'Sprinkle Racer 🍰',
+          color: '#E63946', dark: '#9E1F2A', bodyStyle: 'sport',
+          wheelR: 12, wheelBase: 46, accel: 0.55, maxSpeed: 13.5, reverseSpeed: 4.5,
+          grip: 0.75, bounce: 0.16, cost: 0,
+          blurb: 'Super fast — jaise Annu aakhri cake slice pe lapakti h 😂🍰',
+          stats: { speed: 0.95, grip: 0.45, bounce: 0.25 },
+          bodyImgSrc: 'assets/sport-body.png', wheelImgSrc: 'assets/sport-wheel.png', spriteYOffset: 1.6, flipX: true
+        },
+        {
+          id: 'scooter', name: 'Balloon Scooter 🛵',
+          color: '#7B61FF', dark: '#4A38A8', bodyStyle: 'scooter',
+          wheelR: 13, wheelBase: 36, accel: 0.46, maxSpeed: 10, reverseSpeed: 3.8,
+          grip: 0.6, bounce: 0.55, cost: 0,
+          blurb: 'Light and floaty — catches serious air with birthday balloons attached!',
+          stats: { speed: 0.55, grip: 0.35, bounce: 0.90 },
+          bodyImgSrc: 'assets/scooter-body.png', wheelImgSrc: 'assets/scooter-wheel.png', spriteYOffset: 1.1, openTop: true, driverPos: { x: 4, y: -20 }
+        },
+        {
+          id: 'hcr_rally', name: 'Rally Hatchback 🚙',
+          color: '#1E88E5', dark: '#1565C0', bodyStyle: 'custom',
+          wheelR: 15, wheelBase: 52, accel: 0.60, maxSpeed: 14, reverseSpeed: 4.5,
+          grip: 0.8, bounce: 0.30, cost: 0,
+          blurb: 'Quick, nimble, and ready for any wild road trip with your bestie.',
+          stats: { speed: 0.80, grip: 0.70, bounce: 0.30 },
+          bodyImgSrc: 'assets/hcr_rally_clean.png', wheelImgSrc: 'none',
+          bodyWidthMult: 2.2, spriteYOffset: 0.95
+        },
+        {
+          id: 'hcr_police', name: 'Party Patrol 🚓',
+          color: '#212121', dark: '#000000', bodyStyle: 'custom',
+          wheelR: 14, wheelBase: 65, accel: 0.50, maxSpeed: 16, reverseSpeed: 4,
+          grip: 0.7, bounce: 0.15, cost: 0,
+          blurb: 'To protect and serve the party... arresting all bad moods on sight!',
+          stats: { speed: 0.90, grip: 0.60, bounce: 0.20 },
+          bodyImgSrc: 'assets/hcr_police_clean.png', wheelImgSrc: 'none',
+          bodyWidthMult: 2.6, spriteYOffset: 0.95
+        },
+        {
+          id: 'hcr_hippie', name: 'Good Vibes Van ☮️',
+          color: '#FBC02D', dark: '#F9A825', bodyStyle: 'custom',
+          wheelR: 13, wheelBase: 56, accel: 0.35, maxSpeed: 11, reverseSpeed: 3.5,
+          grip: 0.9, bounce: 0.40, cost: 0,
+          blurb: "Peace, love, and flower power — blasting Annu's favorite tunes.",
+          stats: { speed: 0.40, grip: 0.80, bounce: 0.50 },
+          bodyImgSrc: 'assets/hcr_hippie_clean.png', wheelImgSrc: 'none',
+          bodyWidthMult: 2.1, spriteYOffset: 0.95
+        },
+        {
+          id: 'hcr_monster', name: 'Mega Monster Truck 🚛',
+          color: '#D32F2F', dark: '#9A0007', bodyStyle: 'custom',
+          wheelR: 24, wheelBase: 58, accel: 0.70, maxSpeed: 16, reverseSpeed: 5,
+          grip: 1.2, bounce: 0.60, cost: 0,
+          blurb: "Massive wheels. Massive power. Crushing into Annu's awesome new year!",
+          stats: { speed: 0.90, grip: 0.90, bounce: 0.80 },
+          bodyImgSrc: 'assets/hcr_monster_clean.png', wheelImgSrc: 'none',
+          bodyWidthMult: 1.9, spriteYOffset: 0.95
+        }
+      ];
+
+      const VEHICLES_BY_ID = Object.fromEntries(VEHICLES.map(v => [v.id, v]));
+      let selectedVehicleId = 'annu_car';
+      let V = VEHICLES_BY_ID[selectedVehicleId];
+      const unlockedVehicles = new Set(VEHICLES.map(v => v.id));
+      const imageCache = {};
+
+      // ============================================================
+      // §5  VEHICLE RENDERING
+      // ============================================================
+
+      /** Utility: lighten/darken a hex color by amt (positive = lighter) */
+      function lighten(hex, amt) {
+        const n = parseInt(hex.replace('#', ''), 16);
+        let r = ((n >> 16) & 0xff) + amt;
+        let g = ((n >> 8) & 0xff) + amt;
+        let b = ((n) & 0xff) + amt;
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+        return `rgb(${r},${g},${b})`;
+      }
+
+      /** Body gradient helper (top-to-bottom) */
+      function bodyGradient(g, vehicle, x0, y0, x1, y1) {
+        const grad = g.createLinearGradient(x0, y0, x1, y1);
+        grad.addColorStop(0, lighten(vehicle.color, 30));
+        grad.addColorStop(0.55, vehicle.color);
+        grad.addColorStop(1, vehicle.dark);
+        return grad;
+      }
+
+      /** Draw a single tyre + hub at position (wx, 0) in local space */
+      function drawWheel(g, wx, wr, s, wheelRot, vehicle) {
+        g.save();
+        g.translate(wx, wr - 2 * s);
+
+        // Tyre
+        const tireG = g.createRadialGradient(-wr * .3, -wr * .3, wr * .15, 0, 0, wr);
+        tireG.addColorStop(0, '#3a3d4d');
+        tireG.addColorStop(0.7, vehicle.dark);
+        tireG.addColorStop(1, '#0e0f18');
+        g.fillStyle = tireG;
+        g.beginPath(); g.arc(0, 0, wr, 0, Math.PI * 2); g.fill();
+
+        // Tread marks
+        g.save(); g.rotate(wheelRot);
+        g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = Math.max(1, 1.6 * s);
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          g.beginPath();
+          g.moveTo(Math.cos(a) * wr * .82, Math.sin(a) * wr * .82);
+          g.lineTo(Math.cos(a) * wr * .98, Math.sin(a) * wr * .98);
+          g.stroke();
+        }
+
+        // Special hub for Annu's car — 5-petal flower rim
+        if (vehicle.id === 'annu_car') {
+          const hs = wr * .45;
+          g.fillStyle = '#E8E8E8';
+          g.beginPath(); g.arc(0, 0, wr * .75, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = '#B8B8B8'; g.stroke();
+          g.fillStyle = '#c471ed'; g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = Math.max(1, s);
+          for (let i = 0; i < 5; i++) {
+            g.save(); g.rotate((i / 5) * Math.PI * 2); g.translate(0, -wr * .4);
+            g.beginPath();
+            g.moveTo(0, hs * .5);
+            g.bezierCurveTo(-hs * 1.1, -hs * .1, -hs * .6, -hs * .8, 0, -hs * .5);
+            g.bezierCurveTo(hs * .6, -hs * .8, hs * 1.1, -hs * .1, 0, hs * .5);
+            g.fill(); g.stroke(); g.restore();
+          }
+          g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, wr * .18, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = '#8b2fc9'; g.stroke();
+        } else {
+          // Generic spoked hub
+          g.fillStyle = '#E8E8E8'; g.beginPath(); g.arc(0, 0, wr * .4, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = '#B8B8B8'; g.lineWidth = Math.max(1, 1.4 * s);
+          for (let i = 0; i < 5; i++) {
+            const a = (i / 5) * Math.PI * 2;
+            g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * wr * .36, Math.sin(a) * wr * .36); g.stroke();
+          }
+          g.fillStyle = '#8B8FA3'; g.beginPath(); g.arc(0, 0, wr * .12, 0, Math.PI * 2); g.fill();
+        }
+        g.restore();
+
+        // Rim highlight
+        g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = Math.max(1, 1.3 * s);
+        g.beginPath(); g.arc(-wr * .3, -wr * .3, wr * .55, -0.6, 0.9); g.stroke();
+        g.restore();
+      }
+
+      /** Draw small front/tail lights */
+      function drawLights(g, fx, fy, rx, ry, s) {
+        g.fillStyle = '#FFF6C4';
+        g.beginPath(); g.arc(fx - 2 * s, fy, 3 * s, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#1E1F2E'; g.lineWidth = Math.max(1, s); g.stroke();
+        g.fillStyle = '#E63946';
+        g.beginPath(); g.arc(rx + 2 * s, ry, 2.4 * s, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
+
+      /** Draw vehicle using a pre-loaded sprite image */
+      function drawVehicleSprite(g, vehicle, angle, wheelRot, squash, s, bodyImg, wheelImg) {
+        const wr = vehicle.wheelR * s;
+        const halfBase = (vehicle.wheelBase / 2) * s;
+        g.save(); g.rotate(angle); g.scale(1 / squash, squash);
+
+        const bMult = vehicle.bodyWidthMult || 2.8;
+        const bodyDrawWidth = halfBase * bMult;
+        const imgW = bodyImg.naturalWidth || bodyImg.width;
+        const imgH = bodyImg.naturalHeight || bodyImg.height;
+        const bodyDrawHeight = bodyDrawWidth * (imgH / imgW);
+        const yOffset = (vehicle.spriteYOffset != null ? vehicle.spriteYOffset : .4) * wr;
+        const xOffset = (vehicle.spriteXOffset != null ? vehicle.spriteXOffset : 0) * wr;
+
+        g.save();
+        if (vehicle.flipX) g.scale(-1, 1);
+        g.drawImage(bodyImg, -bodyDrawWidth / 2 + xOffset, -bodyDrawHeight + yOffset, bodyDrawWidth, bodyDrawHeight);
+        g.restore();
+
+        drawDriver(g, vehicle, s);
+
+        [-halfBase, halfBase].forEach(wx => {
+          if (vehicle.wheelImgSrc === 'none') return;
+          if (wheelImg) {
+            g.save(); g.translate(wx, wr - 2 * s); g.rotate(wheelRot);
+            g.drawImage(wheelImg, -wr, -wr, wr * 2, wr * 2); g.restore();
+          } else {
+            drawWheel(g, wx, wr, s, wheelRot, vehicle);
+          }
+        });
+        g.restore();
+      }
+
+      /** Draws the custom bobblehead driver in open vehicles */
+      function drawDriver(g, vehicle, s) {
+        if (!vehicle.openTop || !vehicle.driverPos) return;
+        const dx = vehicle.driverPos.x * s;
+        const dy = vehicle.driverPos.y * s;
+        const headSize = 38 * s;
+        const bob = Math.sin(performance.now() * 0.015) * 2 * s * (1 / car.squash - 1);
+        const lean = car.vx * 0.02;
+
+        const drvImg = imageCache['assets/driver.png'];
+        if (!drvImg || !drvImg.complete || drvImg.naturalWidth === 0) {
+          // Cute Birthday Queen Annu Driver with Crown!
+          g.save();
+          g.translate(dx, dy + bob);
+          g.rotate(lean);
+
+          // Hair
+          g.beginPath();
+          g.arc(0, -headSize * 0.45, headSize * 0.38, 0, Math.PI * 2);
+          g.fillStyle = '#4A2E18';
+          g.fill();
+
+          // Face
+          g.beginPath();
+          g.arc(0, -headSize * 0.42, headSize * 0.30, 0, Math.PI * 2);
+          g.fillStyle = '#FFDFC4';
+          g.fill();
+
+          // Sparkly eyes
+          g.fillStyle = '#1E1F2E';
+          g.beginPath();
+          g.arc(-headSize * 0.11, -headSize * 0.44, 2.2 * s, 0, Math.PI * 2);
+          g.arc(headSize * 0.11, -headSize * 0.44, 2.2 * s, 0, Math.PI * 2);
+          g.fill();
+
+          // Cheerful smile
+          g.strokeStyle = '#E91E63';
+          g.lineWidth = 1.8 * s;
+          g.beginPath();
+          g.arc(0, -headSize * 0.38, 4.5 * s, 0.2, Math.PI - 0.2);
+          g.stroke();
+
+          // Gold Birthday Crown
+          g.fillStyle = '#FFD23F';
+          g.strokeStyle = '#F57F17';
+          g.lineWidth = 1.2 * s;
+          g.beginPath();
+          g.moveTo(-headSize * 0.22, -headSize * 0.72);
+          g.lineTo(-headSize * 0.22, -headSize * 0.92);
+          g.lineTo(-headSize * 0.09, -headSize * 0.79);
+          g.lineTo(0, -headSize * 0.98);
+          g.lineTo(headSize * 0.09, -headSize * 0.79);
+          g.lineTo(headSize * 0.22, -headSize * 0.92);
+          g.lineTo(headSize * 0.22, -headSize * 0.72);
+          g.closePath();
+          g.fill();
+          g.stroke();
+
+          // Crown jewel
+          g.beginPath();
+          g.arc(0, -headSize * 0.86, 2 * s, 0, Math.PI * 2);
+          g.fillStyle = '#E91E63';
+          g.fill();
+
+          g.restore();
+          return;
+        }
+
+        // The image has 4 heads. Crop the second one (smiling with eyes open)
+        const sw = drvImg.naturalWidth / 4;
+        const sh = drvImg.naturalHeight;
+        const sx = sw * 1;
+        const sy = 0;
+
+        g.save();
+        g.translate(dx, dy + bob);
+        g.rotate(lean);
+        // Draw the cropped head
+        g.drawImage(drvImg, sx, sy, sw, sh, -headSize / 2, -headSize + 10 * s, headSize, headSize * (sh / sw));
+        g.restore();
+      }
+
+      /**
+       * Master vehicle draw dispatcher.
+       * Tries sprite first; falls back to programmatic canvas shapes.
+       */
+      function drawVehicleShape(g, vehicle, angle, wheelRot, squash, scale) {
+        const s = scale || 1;
+        const bodyImg = vehicle.bodyImgSrc ? imageCache[vehicle.bodyImgSrc] : null;
+        const wheelImg = vehicle.wheelImgSrc ? imageCache[vehicle.wheelImgSrc] : null;
+        const bodyReady = bodyImg && ((bodyImg.complete && bodyImg.naturalWidth > 0) || bodyImg.width > 0);
+
+        if (bodyReady) { drawVehicleSprite(g, vehicle, angle, wheelRot, squash, s, bodyImg, wheelImg); return; }
+
+        const wr = vehicle.wheelR * s;
+        const halfBase = (vehicle.wheelBase / 2) * s;
+
+        g.save(); g.rotate(angle); g.scale(1 / squash, squash);
+        g.strokeStyle = '#1E1F2E'; g.lineWidth = Math.max(1.5, 3 * s);
+
+        // ── EXISTING BODY STYLES ────────────────────────────────
+        if (vehicle.bodyStyle === 'monster') {
+          const hb = halfBase * .95;
+          g.fillStyle = bodyGradient(g, vehicle, 0, -34 * s, 0, 8 * s);
+          g.beginPath(); g.moveTo(-hb - 6 * s, 6 * s); g.lineTo(-hb - 6 * s, -20 * s); g.lineTo(-6 * s, -34 * s);
+          g.lineTo(10 * s, -34 * s); g.lineTo(hb + 6 * s, -16 * s); g.lineTo(hb + 6 * s, 6 * s); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = vehicle.dark;
+          [-halfBase, halfBase].forEach(wx => { g.beginPath(); g.arc(wx, wr - 2 * s, wr * .78, Math.PI, 0); g.fill(); });
+          g.fillStyle = '#888'; g.fillRect(-hb - 10 * s, -32 * s, 5 * s, 14 * s); g.strokeRect(-hb - 10 * s, -32 * s, 5 * s, 14 * s);
+          g.fillStyle = '#DDF2FF'; g.beginPath(); g.moveTo(-2 * s, -30 * s); g.lineTo(8 * s, -30 * s); g.lineTo(13 * s, -18 * s); g.lineTo(-2 * s, -18 * s); g.closePath(); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+          drawLights(g, hb + 6 * s, -6 * s, -hb - 6 * s, -6 * s, s);
+
+        } else if (vehicle.bodyStyle === 'sport') {
+          const hb = halfBase * 1.05;
+          g.fillStyle = bodyGradient(g, vehicle, 0, -16 * s, 0, 6 * s);
+          g.beginPath(); g.moveTo(-hb, 6 * s); g.lineTo(-hb + 8 * s, -4 * s); g.lineTo(-4 * s, -16 * s);
+          g.lineTo(10 * s, -16 * s); g.lineTo(hb - 2 * s, -2 * s); g.lineTo(hb, 6 * s); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(-hb + 10 * s, -14 * s, 4 * s, 18 * s);
+          g.fillStyle = vehicle.dark; g.fillRect(-hb - 2 * s, -18 * s, 4 * s, 12 * s); g.fillRect(-hb - 8 * s, -20 * s, 10 * s, 3.5 * s);
+          g.fillStyle = '#DDF2FF'; g.beginPath(); g.moveTo(-2 * s, -13 * s); g.lineTo(8 * s, -13 * s); g.lineTo(12 * s, -4 * s); g.lineTo(-4 * s, -4 * s); g.closePath(); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+          drawLights(g, hb, -1 * s, -hb, -1 * s, s);
+
+        } else if (vehicle.bodyStyle === 'scooter') {
+          const hb = halfBase * 1.1;
+          g.fillStyle = bodyGradient(g, vehicle, 0, -10 * s, 0, 6 * s);
+          g.beginPath(); g.moveTo(-hb, 6 * s); g.lineTo(-hb + 4 * s, -10 * s); g.lineTo(hb - 10 * s, -10 * s); g.lineTo(hb - 2 * s, 4 * s); g.lineTo(hb, 6 * s); g.closePath(); g.fill(); g.stroke();
+          g.strokeStyle = '#1E1F2E'; g.beginPath(); g.moveTo(-hb + 6 * s, -10 * s); g.lineTo(-hb + 6 * s, -22 * s); g.stroke();
+          g.fillStyle = vehicle.dark; g.beginPath(); g.moveTo(-hb + 6 * s, -22 * s); g.lineTo(-hb - 6 * s, -22 * s); g.lineTo(-hb - 6 * s, -18 * s); g.lineTo(-hb + 6 * s, -18 * s); g.closePath(); g.fill(); g.stroke();
+          ['#FF6F59', '#FFD23F', '#7FC8A9'].forEach((c, i) => {
+            const bx = -hb - 6 * s - i * 7 * s, by = -30 * s + i * 4 * s;
+            g.strokeStyle = '#B08968'; g.lineWidth = Math.max(1, s);
+            g.beginPath(); g.moveTo(-hb - 6 * s, -20 * s); g.lineTo(bx, by + 8 * s); g.stroke();
+            g.fillStyle = c; g.beginPath(); g.ellipse(bx, by, 5 * s, 6.5 * s, 0, 0, Math.PI * 2); g.fill();
+            g.strokeStyle = '#1E1F2E'; g.lineWidth = Math.max(1, 1.2 * s); g.stroke();
+          });
+          g.fillStyle = '#DDF2FF'; g.beginPath(); g.moveTo(hb - 16 * s, -10 * s); g.lineTo(hb - 8 * s, -10 * s); g.lineTo(hb - 6 * s, -2 * s); g.lineTo(hb - 16 * s, -2 * s); g.closePath(); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+          drawLights(g, hb, 0, -hb, 0, s);
+
+        } else if (vehicle.bodyStyle === 'nano') {
+          const hb = halfBase * 1.1;
+          g.fillStyle = bodyGradient(g, vehicle, 0, -28 * s, 0, 4 * s);
+          g.beginPath(); g.moveTo(-hb, 2 * s); g.lineTo(-hb, -10 * s);
+          g.quadraticCurveTo(-hb, -28 * s, -hb / 2, -30 * s); g.lineTo(hb / 2, -30 * s);
+          g.quadraticCurveTo(hb + 4 * s, -26 * s, hb + 4 * s, -8 * s); g.lineTo(hb + 4 * s, 2 * s); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = '#DDF2FF';
+          g.beginPath(); g.moveTo(-hb + 6 * s, -12 * s); g.lineTo(-hb / 2, -26 * s); g.lineTo(0, -26 * s); g.lineTo(0, -12 * s); g.closePath(); g.fill(); g.stroke();
+          g.beginPath(); g.moveTo(hb - 2 * s, -12 * s); g.quadraticCurveTo(hb - 2 * s, -22 * s, hb / 2, -26 * s); g.lineTo(2 * s, -26 * s); g.lineTo(2 * s, -12 * s); g.closePath(); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+          drawLights(g, hb + 2 * s, -6 * s, -hb + 2 * s, -6 * s, s);
+
+        } else if (vehicle.bodyStyle === 'buggy') {
+          const hb = halfBase;
+          g.fillStyle = bodyGradient(g, vehicle, 0, -22 * s, 0, 8 * s);
+          g.beginPath(); g.moveTo(-hb, 8 * s); g.lineTo(-hb, -6 * s); g.lineTo(-10 * s, -22 * s); g.lineTo(12 * s, -22 * s); g.lineTo(hb, -4 * s); g.lineTo(hb, 8 * s); g.closePath(); g.fill(); g.stroke();
+          g.strokeStyle = vehicle.dark; g.lineWidth = Math.max(1.5, 2.6 * s);
+          g.beginPath(); g.moveTo(-8 * s, -6 * s); g.lineTo(-6 * s, -26 * s); g.lineTo(8 * s, -26 * s); g.lineTo(9 * s, -6 * s); g.stroke();
+          g.strokeStyle = '#1E1F2E'; g.lineWidth = Math.max(1.5, 3 * s);
+          g.fillStyle = '#DDF2FF'; g.beginPath(); g.moveTo(-6 * s, -19 * s); g.lineTo(9 * s, -19 * s); g.lineTo(15 * s, -6 * s); g.lineTo(-6 * s, -6 * s); g.closePath(); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+          drawLights(g, hb, 2 * s, -hb, 2 * s, s);
+
+          // ── NEW CANVAS BODY STYLES ──────────────────────────────
+
+        } else if (vehicle.bodyStyle === 'van') {
+          // ── Dream Van ──
+          const hb = halfBase * 1.05;
+          const roofH = 44 * s;
+
+          // Main boxy body
+        } else {
+          // ── Generic fallback ──
+          g.fillStyle = bodyGradient(g, vehicle, 0, -20 * s, 0, 8 * s);
+          g.beginPath(); g.rect(-halfBase, -20 * s, halfBase * 2, 28 * s); g.fill(); g.stroke();
+          [-halfBase, halfBase].forEach(wx => drawWheel(g, wx, wr, s, wheelRot, vehicle));
+        }
+
+        drawDriver(g, vehicle, s);
+
+        // Universal gloss highlight (top of body)
+        g.fillStyle = 'rgba(255,255,255,.18)';
+        g.beginPath(); g.ellipse(-halfBase * .1, -halfBase * .28 - 6 * s, halfBase * .5, 3.5 * s, -.15, 0, Math.PI * 2); g.fill();
+
+        // Party flag antenna (most vehicles)
+        if (!['scooter', 'van', 'rover', 'rocket', 'kart'].includes(vehicle.bodyStyle)) {
+          g.strokeStyle = '#1E1F2E'; g.lineWidth = Math.max(1, 2 * s);
+          const flagX = vehicle.bodyStyle === 'monster' ? -halfBase - 4 * s : -halfBase + 4 * s;
+          g.beginPath(); g.moveTo(flagX, -8 * s); g.lineTo(flagX, -30 * s); g.stroke();
+          g.fillStyle = '#FFD23F';
+          g.beginPath(); g.moveTo(flagX, -30 * s); g.lineTo(flagX + 14 * s, -24 * s); g.lineTo(flagX, -18 * s); g.closePath(); g.fill(); g.stroke();
+        }
+
+        g.restore();
+      }
+
+      // ============================================================
+      // §6  COLLECTIBLES & OBSTACLES
+      // ============================================================
+      // ── Messages shown at end-screen recap ──────────────────────
+      const FINAL_MESSAGES = [
+        "Happiest Birthday Annu! 🎂 Bas aaj ke din full smile karti reh!",
+        "Aaj 24 ghante ke liye Deepak officially tujhe roast nahi karega (kal se wapas shuru 😂)",
+        "Tujhe pta h na tu mere liye kitni important h, bas bol nhi pata kabhi dhang se 🥺",
+        "College/exams/life ka jo bhi stress h, aaj sab bhool ja — sirf enjoy kar 🍰",
+        "Har saal tere saath dosti aur zyada crazy hoti ja rhi h, aur mujhe koi complaint nhi h 😂💜",
+        "Teri wajah se boring din bhi entertaining ho jaate h, that's your superpower ✨",
+        "Tu hamesha aisi hi rehna — thodi pagal, thodi drama queen, par dil ki bilkul saaf 🫶",
+        "Party ka bill ready rakhna (aur haan, main pay karunga chill kar 😂🍕)"
+      ];
+
+      // ── Mid-ride milestone messages (car.x thresholds) ───────────
+      // Spaced across the journey so they feel earned, not spammy.
+      // car.x / 10 = metres shown on HUD.
+      const MILESTONE_MESSAGES = [
+        {
+          atX: 2800,
+          icon: '🚗',
+          badge: 'Milestone 1 • Start',
+          title: 'Chal Shuru Ho Gaya! 💨',
+          text: 'Fasten your seatbelt Annu! Ride shuru ho chuki h, aage aage dekh tere liye aur kya kya surprises aate hain! 💜'
+        },
+        {
+          atX: 8000,
+          icon: '🫶',
+          badge: 'Milestone 2 • Real Talk',
+          title: 'Bestie Check! ✨',
+          text: 'Kitni bhi ladai ho ya roasts, end me tere jaisa dost milna aasan nahi h. No filters, no drama, jo mann me aaye bol sakte hain! 🤍'
+        },
+        {
+          atX: 15000,
+          icon: '😎',
+          badge: 'Milestone 3 • Halfway',
+          title: 'Driving Dekh Rahi Ho? 🏎️',
+          text: 'Pahaad ho ya khadde, sab uda diye tune! Waise birthday cake me mera piece sabse bada hona chahiye, yaad rakhna 🍰😂'
+        },
+        {
+          atX: 23000,
+          icon: '🏁',
+          badge: 'Milestone 4 • Near Finish',
+          title: 'Finish Line Pass H! 🎉',
+          text: 'Bas pahunchne wali h! Aage finish pe tere liye letters aur ek homemade poem wait kar rahi h... padh ke hasegi pakka! 🥳'
+        }
+      ];
+      let nextMilestoneIdx = 0;  // tracks which milestone comes next
+      let messagePaused = false; // true while message overlay is visible
+
+      // ── Message overlay DOM refs ─────────────────────────────────
+      const msgOverlay = document.getElementById('message-overlay');
+      const msgBadgeEl = document.getElementById('msg-badge');
+      const msgIconEl = document.getElementById('msg-icon');
+      const msgTitleEl = document.getElementById('msg-title');
+      const msgTextEl = document.getElementById('msg-text');
+      const msgContinue = document.getElementById('msg-continue-btn');
+
+      function showMilestoneMessage(m) {
+        messagePaused = true;
+        msgBadgeEl.textContent = m.badge;
+        msgIconEl.textContent = m.icon;
+        msgTitleEl.textContent = m.title;
+        msgTextEl.textContent = m.text;
+        msgOverlay.classList.remove('hidden');
+        stopMusic();
+      }
+      function hideMilestoneMessage() {
+        msgOverlay.classList.add('hidden');
+        messagePaused = false;
+        if (started && !finished) startMusic();
+      }
+      msgContinue.addEventListener('click', hideMilestoneMessage);
+
+      const CANDLE_SPACING = 340;
+      let polaroids = [];
+      function buildPolaroids() {
+        polaroids = [];
+        // Only spawn 3 to 4 times per run as requested
+        const spawnCount = Math.floor(Math.random() * 2) + 3; // 3 or 4
+
+        const trackLength = FINISH_X - 1000;
+        const sectionLength = trackLength / spawnCount;
+
+        for (let i = 0; i < spawnCount; i++) {
+          // Place one randomly within each section of the track
+          let x = 800 + (i * sectionLength) + (Math.random() * (sectionLength * 0.6));
+          polaroids.push({
+            x,
+            y: terrainY(x) - 70,
+            collected: false,
+            bob: Math.random() * Math.PI * 2
+          });
+        }
+      }
+      let TOTAL_POLAROIDS = 0;
+
+      let fuelCans = [];
+      function buildFuelCans() {
+        fuelCans = [];
+        for (let x = 1200; x < FINISH_X - 300; x += 2000 + Math.random() * 800)
+          fuelCans.push({ x, y: terrainY(x) - 20, collected: false });
+      }
+
+      let ramps = [];
+      function buildRamps() {
+        ramps = [];
+        for (let x = 700; x < FINISH_X - 300; x += 850 + Math.random() * 300)
+          ramps.push({ x, used: false, width: 70 });
+      }
+
+      let obstacles = [];
+      function buildObstacles() {
+        obstacles = [];
+        const texts = ['MONDAY', 'EXAMS', 'BAD VIBES', 'OVERTHINKING', 'STRESS', 'NEGATIVITY'];
+        for (let x = 900; x < FINISH_X - 500; x += 1500 + Math.random() * 1000)
+          obstacles.push({ x, y: terrainY(x) - 25, width: 60, height: 50, text: texts[Math.floor(Math.random() * texts.length)], broken: false, pieces: [] });
+      }
+
+      // Drawing helpers
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+      }
+
+      const boyImg = new Image();
+      boyImg.src = 'assets/boy.png';
+
+      function drawPolaroids() {
+        polaroids.forEach(p => {
+          if (p.collected) return;
+          const sx = p.x - camX;
+          if (sx < -60 || sx > W + 60) return;
+
+          ctx.save(); ctx.translate(sx, p.y + 30);
+          const bob = Math.sin(performance.now() * .005 + p.bob) * 3;
+
+          if (boyImg.complete && boyImg.naturalWidth > 0) {
+            const targetH = 120; // Made him a bit larger so it's satisfying to meet
+            const targetW = targetH * (boyImg.naturalWidth / boyImg.naturalHeight);
+
+            // Draw Deepak
+            ctx.drawImage(boyImg, -targetW / 2, -targetH + bob, targetW, targetH);
+
+            // Party cone hat on Deepak!
+            ctx.save();
+            ctx.translate(0, -targetH + bob);
+            ctx.beginPath();
+            ctx.moveTo(-14, 2);
+            ctx.lineTo(14, 2);
+            ctx.lineTo(0, -26);
+            ctx.closePath();
+            ctx.fillStyle = '#FFD23F';
+            ctx.fill();
+            ctx.strokeStyle = '#f64f59';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Pompom on party cone
+            ctx.beginPath();
+            ctx.arc(0, -28, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#c471ed';
+            ctx.fill();
+
+            // Floating party balloon beside Deepak
+            const balloonBob = Math.sin(performance.now() * 0.004 + p.x) * 6;
+            ctx.beginPath();
+            ctx.arc(26, -24 + balloonBob, 11, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF5252';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(26, -13 + balloonBob);
+            ctx.lineTo(12, 14);
+            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.restore();
+          } else {
+            // Festive Birthday Present Box Fallback
+            ctx.save();
+            ctx.translate(0, bob);
+            ctx.fillStyle = '#f64f59';
+            roundRect(-25, -50, 50, 50, 8);
+            ctx.fill();
+            ctx.fillStyle = '#FFD23F';
+            ctx.fillRect(-6, -50, 12, 50);
+            ctx.fillRect(-25, -28, 50, 12);
+            ctx.font = '22px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎀', 0, -52);
+            ctx.restore();
+          }
+
+          ctx.restore();
+        });
+      }
+
+      function drawFuelCans() {
+        fuelCans.forEach(fc => {
+          if (fc.collected) return;
+          const sx = fc.x - camX;
+          if (sx < -40 || sx > W + 40) return;
+          const bob = Math.sin(performance.now() * .004 + fc.x) * 5;
+          const sy = fc.y + bob - 15;
+          ctx.strokeStyle = '#E63946'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(sx + 5, sy - 22); ctx.lineTo(sx - 3, sy); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.85)';
+          ctx.beginPath(); ctx.moveTo(sx - 10, sy - 15); ctx.lineTo(sx + 10, sy - 15); ctx.lineTo(sx + 7, sy + 15); ctx.lineTo(sx - 7, sy + 15); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = '#222';
+          [[sx - 3, sy + 11], [sx + 3, sy + 12], [sx, sy + 7], [sx - 4, sy + 6], [sx + 4, sy + 8]].forEach(([px, py]) => {
+            ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.fillStyle = '#F4A261';
+          roundRect(sx - 12, sy - 18, 24, 5, 2); ctx.fill();
+        });
+      }
+
+      function drawRamps() {
+        ramps.forEach(r => {
+          const sx = r.x - camX;
+          if (sx < -100 || sx > W + 100) return;
+          const gy = terrainY(r.x), w = r.width, h = 34;
+          ctx.save(); ctx.beginPath();
+          ctx.moveTo(sx - w / 2, gy + 6); ctx.lineTo(sx + w / 2, gy + 6); ctx.lineTo(sx + w / 2, gy - h); ctx.closePath();
+          const g = ctx.createLinearGradient(sx - w / 2, gy, sx + w / 2, gy - h);
+          g.addColorStop(0, '#FFD23F'); g.addColorStop(1, '#FF8C42');
+          ctx.fillStyle = r.used ? '#D9B98A' : g; ctx.fill();
+          ctx.strokeStyle = '#1E1F2E'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3;
+          for (let i = 1; i < 4; i++) {
+            ctx.beginPath(); ctx.moveTo(sx - w / 2 + i * (w / 4), gy + 6); ctx.lineTo(sx - w / 2 + i * (w / 4), gy + 6 - (h * i / 4)); ctx.stroke();
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawObstacles() {
+        obstacles.forEach(o => {
+          if (o.broken) {
+            o.pieces.forEach(p => {
+              ctx.save(); ctx.translate(p.x - camX, p.y); ctx.rotate(p.rot);
+              ctx.fillStyle = p.color; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s); ctx.restore();
+            });
+            return;
+          }
+          const sx = o.x - camX;
+          if (sx < -100 || sx > W + 100) return;
+          ctx.fillStyle = '#222'; ctx.fillRect(sx - o.width / 2, o.y - o.height / 2, o.width, o.height);
+          ctx.strokeStyle = '#c471ed'; ctx.lineWidth = 3; ctx.strokeRect(sx - o.width / 2, o.y - o.height / 2, o.width, o.height);
+          ctx.fillStyle = '#c471ed'; ctx.font = "900 12px 'Baloo 2'"; ctx.textAlign = 'center';
+          ctx.fillText(o.text, sx, o.y + 4);
+        });
+      }
+
+      // ============================================================
+      // §7  WORLD DECORATIONS
+      // ============================================================
+      function hash(n) { const s = Math.sin(n * 12.9898) * 43758.5453; return s - Math.floor(s); }
+
+      function drawDecor() {
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        const step = L.isJungle ? 50 : L.isVolcano ? 130 : 90;
+        const s0 = Math.floor((camX - 100) / step);
+        const s1 = Math.ceil((camX + W + 100) / step);
+        for (let b = s0; b <= s1; b++) {
+          const wx = b * step + hash(b) * 40;
+          if (wx < 260 || wx > FINISH_X - 160) continue;
+          const r = hash(b * 7.13);
+          const gy = terrainY(wx);
+          const sx = wx - camX;
+          if (sx < -60 || sx > W + 60) continue;
+          if (L.isVolcano) {
+            if (r < .25) drawDeadTree(sx, gy); else if (r < .6) drawVolcanoRock(sx, gy, r);
+          } else {
+            const tp = L.isJungle ? .6 : .35, bp = L.isJungle ? .95 : .6;
+            if (r < .05) drawBillboard(sx, gy, hash(b * 3.14));
+            else if (r < tp) drawTree(sx, gy, L);
+            else if (r < bp) drawBush(sx, gy, L);
+          }
+        }
+      }
+
+      function drawBillboard(x, y, r) {
+        const msgs = ["Happy Birthday Annu! 🎂", "Deepak ki taraf se 💜", "Birthday Queen on Track 👑", "Bestie Zone 🫶", "Cake idhar h → 🍰", "No drama zone (jk) 😂"];
+        ctx.fillStyle = '#654321'; ctx.fillRect(x - 4, y - 70, 8, 70);
+        ctx.fillStyle = '#FFF8EC'; ctx.strokeStyle = '#1E1F2E'; ctx.lineWidth = 3;
+        ctx.fillRect(x - 80, y - 100, 160, 40); ctx.strokeRect(x - 80, y - 100, 160, 40);
+        ctx.fillStyle = '#8b2fc9'; ctx.font = "800 12px 'Baloo 2'"; ctx.textAlign = 'center';
+        ctx.fillText(msgs[Math.floor(r * msgs.length)], x, y - 75);
+      }
+
+      function drawDeadTree(x, gy) {
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x - 4, gy - 30); ctx.lineTo(x - 12, gy - 45); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, gy - 25); ctx.lineTo(x + 8, gy - 38); ctx.stroke();
+      }
+      function drawVolcanoRock(x, gy, r) {
+        ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(x, gy - 2, 6 + r * 12, 0, Math.PI, true); ctx.fill();
+      }
+      function drawTree(x, gy, L) {
+        ctx.fillStyle = L.isJungle ? '#4a3018' : '#8B5A2B'; ctx.fillRect(x - 3, gy - 26, 6, 26);
+        ctx.fillStyle = L.isSnow ? '#dcedc1' : L.isJungle ? '#1a4f22' : '#3B8F5C';
+        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(x, gy - 24 - i * 14); ctx.lineTo(x - 18 + i * 2, gy - 4 - i * 14); ctx.lineTo(x + 18 - i * 2, gy - 4 - i * 14); ctx.closePath(); ctx.fill(); }
+      }
+      function drawBush(x, gy, L) {
+        ctx.fillStyle = L.isSnow ? '#e0f7fa' : L.isJungle ? '#266130' : '#5FAE73';
+        [[0, 0, 12], [-10, 3, 9], [10, 3, 9]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx, gy - r + dy, r, 0, Math.PI * 2); ctx.fill(); });
+      }
+
+      const skyBalloons = Array.from({ length: 9 }, (_, i) => ({
+        baseX: i * 520 + hash(i) * 300, baseY: 90 + hash(i * 3) * 180,
+        color: ['#c471ed', '#7FC8A9', '#FFD23F', '#FFC1CC'][i % 4],
+        speed: .15 + hash(i * 5) * .12, bob: hash(i * 9) * Math.PI * 2
+      }));
+      function drawSkyBalloons() {
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        if (L.isVolcano) return;
+        const t = performance.now() * .001;
+        ctx.strokeStyle = 'rgba(30,31,46,.3)'; ctx.lineWidth = 1.5;
+        skyBalloons.forEach(b => {
+          const sx = ((b.baseX - camX * (1 - b.speed)) % (W + 400) + (W + 400)) % (W + 400) - 200;
+          const y = b.baseY + Math.sin(t + b.bob) * 8;
+          ctx.beginPath(); ctx.moveTo(sx, y + 16); ctx.lineTo(sx, y + 34); ctx.stroke();
+          ctx.fillStyle = b.color; ctx.beginPath(); ctx.ellipse(sx, y, 11, 14, 0, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+
+      // ============================================================
+      // §8  PHYSICS & GAME STATE
+      // ============================================================
+      const GRAVITY = 0.85;
+      const BASE_FRICTION = 0.985;
+      const GRAVITY_SLOPE_FACTOR = 0.024;
+
+      const car = { x: START_X, y: 0, vx: 0, vy: 0, angle: 0, wheelRot: 0, grounded: true, squash: 1, fuel: 100 };
+      car.y = terrainY(car.x);
+
+      let gasHeld = false;
+      let brakeHeld = false;
+      let started = false;
+      let finished = false;
+      let polaroidsCollected = 0;
+      // Mini-game variables removed
+      let camX = 0;
+      let camShake = 0;
+      let maxAirGap = 0;
+
+      // Particles
+      let sparks = [], dust = [];
+      function spawnSparks(x, y) {
+        for (let i = 0; i < 10; i++) sparks.push({ x, y, vx: (Math.random() - .5) * 4, vy: -Math.random() * 4 - 1, life: 1, color: ['#c471ed', '#FF6F59', '#4CB963'][i % 3] });
+      }
+      function spawnDust(x, y, count) {
+        for (let i = 0; i < (count || 8); i++) dust.push({ x, y, vx: (Math.random() - .5) * 3.5, vy: -Math.random() * 2.2, life: 1, r: 3 + Math.random() * 3 });
+      }
+      function updateSparks() { sparks.forEach(s => { s.x += s.vx; s.y += s.vy; s.vy += .15; s.life -= .03; }); sparks = sparks.filter(s => s.life > 0); }
+      function updateDust() { dust.forEach(d => { d.x += d.vx; d.y += d.vy; d.vy += .08; d.life -= .035; }); dust = dust.filter(d => d.life > 0); }
+      function drawSparks() { sparks.forEach(s => { ctx.globalAlpha = Math.max(s.life, 0); ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(s.x - camX, s.y, 3.5, 0, Math.PI * 2); ctx.fill(); }); ctx.globalAlpha = 1; }
+      function drawDust() { dust.forEach(d => { ctx.globalAlpha = Math.max(d.life, 0) * .55; ctx.fillStyle = '#C9A876'; ctx.beginPath(); ctx.arc(d.x - camX, d.y, d.r, 0, Math.PI * 2); ctx.fill(); }); ctx.globalAlpha = 1; }
+
+      function update(dt) {
+        if (!started || finished || messagePaused) return;
+
+        // Fuel & acceleration
+        if (car.fuel <= 0) {
+          gasHeld = false;
+          if (Math.abs(car.vx) < .2) { triggerTimeUp('Out of fuel! You drove ' + Math.floor(car.x / 10) + 'm.'); return; }
+        } else {
+          if (gasHeld) { car.vx += V.accel; car.fuel -= dt * 4.5; }
+          car.fuel -= dt * 1.5;
+        }
+
+        if (brakeHeld) car.vx -= V.accel * 1.3;
+        if (!gasHeld && !brakeHeld) car.vx *= BASE_FRICTION;
+
+        const slope = terrainSlope(car.x);
+        car.vx += slope * GRAVITY_SLOPE_FACTOR * V.grip * 60 * dt;
+        car.vx = Math.max(-V.reverseSpeed, Math.min(V.maxSpeed, car.vx));
+        if (car.x <= START_X && car.vx < 0) car.vx = 0;
+        car.x += car.vx;
+        car.x = Math.max(START_X, car.x);
+
+        // Ramp launch
+        ramps.forEach(r => {
+          if (!r.used && car.grounded && Math.abs(car.x - r.x) < r.width / 2 && car.vx > 3) {
+            r.used = true; car.vy -= 9 + Math.min(6, car.vx * .5); playRampWhoosh();
+          }
+        });
+
+        // Vertical physics
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        car.vy += L && L.isMoon ? .25 : GRAVITY;
+        car.y += car.vy;
+        const groundY = terrainY(car.x);
+        maxAirGap = Math.max(maxAirGap, groundY - car.y);
+        if (car.y >= groundY) {
+          const impact = car.vy;
+          car.y = groundY;
+          if (impact > 9) {
+            car.squash = Math.max(.72, 1 - impact * .012);
+            playThud(Math.min(1, impact / 26));
+            spawnDust(car.x, car.y, Math.min(16, 6 + impact * .4));
+            camShake = Math.min(16, impact * .6);
+            if (navigator.vibrate) navigator.vibrate(18);
+          }
+          car.vy = impact > 4 ? -impact * V.bounce * .55 : 0;
+          car.grounded = true;
+        } else {
+          car.grounded = false;
+        }
+        car.squash += (1 - car.squash) * .18;
+
+        const targetAngle = car.grounded
+          ? Math.atan2(terrainY(car.x + 18) - terrainY(car.x - 18), 36)
+          : car.angle + car.vx * .003;
+        car.angle += (targetAngle - car.angle) * (car.grounded ? .18 : .06);
+        car.wheelRot += car.vx * (2.2 / V.wheelR);
+
+        camX += ((car.x - W * .32) - camX) * .12;
+        camX = Math.max(0, camX);
+        camShake *= .85;
+
+        // Collect birthday surprises / meet Deepak
+        polaroids.forEach(p => {
+          if (!p.collected && Math.abs(car.x - p.x) < 36) {
+            p.collected = true; polaroidsCollected++;
+            spawnSparks(p.x, p.y); playCollectChime();
+
+            const birthdaySurprises = [
+              {
+                icon: '💥',
+                badge: 'Ouch! 💥',
+                title: 'Arey Aaram Se! 😂',
+                text: 'Gaadi se kaun maarta h yaar? Seedha hospital bhejegi kya aaj hi? 😭'
+              },
+              {
+                icon: '🛑',
+                badge: 'Slow Down! 🛑',
+                title: 'Driver Sahiba! 🚗',
+                text: 'Thoda break pe pair rakh le! Tera birthday h, mera akhiri din nahi! 😂'
+              },
+              {
+                icon: '🏃‍♂️',
+                badge: 'Hit & Run! 🏃‍♂️',
+                title: 'Police bulao koi! 🚓',
+                text: 'Ek aur baar uda diya! Chal koi nahi, birthday girl ko har crime maaf h aaj 💜'
+              },
+              {
+                icon: '🍕',
+                badge: 'Treat Alert! 🍕',
+                title: 'Hisaab Kitab! 😋',
+                text: 'Jitni baar gaadi mujhpe chadhai h, utna bada pizza treat dena padega tujhe! Deal? 🍕🥤'
+              },
+              {
+                icon: '🫶',
+                badge: 'Bestie Damage! 🫶',
+                title: 'Tu Nahi Sudhregi 😂',
+                text: 'Chal jo bhi h, tu meri favorite bestie h. Ab finish line cross kar jaldi! 🏁💜'
+              }
+            ];
+
+            const surprise = birthdaySurprises[(polaroidsCollected - 1) % birthdaySurprises.length];
+            showMilestoneMessage(surprise);
+            showToast('💥 Deepak ko dhundh ke maara! 😂');
+
+            if (navigator.vibrate) navigator.vibrate(30);
+          }
+        });
+
+        // Collect fuel
+        fuelCans.forEach(fc => {
+          if (!fc.collected && Math.abs(car.x - fc.x) < 40 && Math.abs(car.y - fc.y) < 60) {
+            fc.collected = true; car.fuel = Math.min(100, car.fuel + 40);
+            spawnSparks(fc.x, fc.y); playCollectChime(); showToast('Fuel Refilled! ⚡');
+          }
+        });
+
+        // Smash obstacles
+        obstacles.forEach(o => {
+          if (!o.broken && Math.abs(car.x - o.x) < 50 && Math.abs(car.y - o.y) < 50 && car.vx > 2) {
+            o.broken = true; playThud(.5); car.vx += 3; showToast('SMASHED ' + o.text + '! 💜');
+            for (let i = 0; i < 12; i++) o.pieces.push({ x: o.x, y: o.y, vx: car.vx * .5 + (Math.random() - .5) * 5, vy: -2 - Math.random() * 5, rot: 0, vr: (Math.random() - .5) * .5, s: 4 + Math.random() * 6, color: i % 2 === 0 ? '#222' : '#c471ed' });
+          }
+          if (o.broken) o.pieces.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .3; p.rot += p.vr; });
+        });
+
+        updateSparks(); updateDust(); updateEngineSound(); updateHud();
+
+        // ── Check milestone messages ─────────────────────────────
+        if (!messagePaused && nextMilestoneIdx < MILESTONE_MESSAGES.length) {
+          const m = MILESTONE_MESSAGES[nextMilestoneIdx];
+          if (car.x >= m.atX && m.atX < FINISH_X - 500) {
+            nextMilestoneIdx++;
+            car.vx = 0; // brief stop
+            showMilestoneMessage(m);
+          }
+        }
+
+        if (!messagePaused && car.x >= FINISH_X - 10 && !finished) { car.vx = 0; finishRide(); }
+      }
+
+      // ============================================================
+      // §9  WORLD RENDERING
+      // ============================================================
+      function drawSky() {
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        if (L.isSnow) { g.addColorStop(0, '#101525'); g.addColorStop(.55, '#202e4d'); g.addColorStop(1, '#3a5a7a'); }
+        else if (L.isJungle) { g.addColorStop(0, '#3a1c02'); g.addColorStop(.5, '#b04a0b'); g.addColorStop(1, '#e3902b'); }
+        else if (L.isVolcano) { g.addColorStop(0, '#1a0502'); g.addColorStop(.5, '#4a0e05'); g.addColorStop(1, '#8a1f0d'); }
+        else if (L.isMoon) { g.addColorStop(0, '#020205'); g.addColorStop(1, '#11111a'); }
+        else if (L.isJourney) { g.addColorStop(0, `hsl(${(camX * .02) % 360},60%,20%)`); g.addColorStop(1, `hsl(${(camX * .02) % 360},80%,60%)`); }
+        else { g.addColorStop(0, '#c471ed'); g.addColorStop(.55, '#f64f59'); g.addColorStop(1, '#FFE7A0'); }
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+        if (L.isMoon) {
+          ctx.fillStyle = 'rgba(255,255,255,.8)';
+          for (let i = 0; i < 100; i++) ctx.fillRect(hash(i * 11.1) * W, hash(i * 7.3) * (H * .8), hash(i) > .5 ? 2 : 1, hash(i) > .5 ? 2 : 1);
+          return;
+        }
+
+        const sunG = ctx.createRadialGradient(W * .78, H * .2, 4, W * .78, H * .2, 70);
+        if (L.isSnow) { sunG.addColorStop(0, '#fff'); sunG.addColorStop(1, 'transparent'); }
+        else if (L.isJungle) { sunG.addColorStop(0, '#ffddaa'); sunG.addColorStop(1, 'transparent'); }
+        else if (L.isVolcano) { sunG.addColorStop(0, '#ffa500'); sunG.addColorStop(1, 'transparent'); }
+        else if (L.isJourney) { sunG.addColorStop(0, '#fff'); sunG.addColorStop(1, 'transparent'); }
+        else { sunG.addColorStop(0, '#FFF3C4'); sunG.addColorStop(1, '#FFD23F'); }
+        ctx.fillStyle = sunG; ctx.beginPath(); ctx.arc(W * .78, H * .2, 48, 0, Math.PI * 2); ctx.fill();
+
+        if (L.isSnow) { ctx.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 60; i++) ctx.fillRect(hash(i * 11.1) * W, hash(i * 7.3) * (H * .6), 3, 3); }
+        if (L.isVolcano) { ctx.fillStyle = 'rgba(255,100,50,.6)'; for (let i = 0; i < 40; i++) ctx.fillRect(hash(i * 11.1) * W, hash(i * 7.3) * (H * .9), 2 + hash(i) * 3, 2 + hash(i) * 3); }
+
+        if (!L.isVolcano) {
+          ctx.fillStyle = L.isJungle ? 'rgba(255,200,150,.4)' : L.isJourney ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.8)';
+          for (let i = 0; i < 6; i++) drawCloud(((i * 420 - camX * .15) % (W + 600)) - 200, 70 + (i % 3) * 40, 1 + (i % 2) * .3);
+        }
+      }
+      function drawCloud(x, y, scale) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, 34 * scale, 18 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 26 * scale, y + 6 * scale, 26 * scale, 15 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(x - 24 * scale, y + 8 * scale, 22 * scale, 13 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawFarHills() {
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        if (L.isSnow) ctx.fillStyle = '#5a6e87';
+        else if (L.isJungle) ctx.fillStyle = '#1e381b';
+        else if (L.isVolcano) ctx.fillStyle = '#120503';
+        else if (L.isMoon) ctx.fillStyle = '#222';
+        else if (L.isJourney) ctx.fillStyle = `hsl(${(camX * .02) % 360},50%,30%)`;
+        else ctx.fillStyle = '#6FBE9C';
+        ctx.beginPath(); ctx.moveTo(0, H);
+        const parallax = camX * .4;
+        for (let sx = 0; sx <= W; sx += 20) ctx.lineTo(sx, terrainY((sx + parallax) * 1.5) * .75 + H * .16);
+        ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+      }
+      function drawGround() {
+        const L = LEVELS.find(l => l.id === selectedLevelId);
+        ctx.beginPath(); ctx.moveTo(-10, H + 10);
+        for (let sx = -10; sx <= W + 10; sx += 8) ctx.lineTo(sx, terrainY(sx + camX));
+        ctx.lineTo(W + 10, H + 10); ctx.closePath();
+        const g = ctx.createLinearGradient(0, H * .45, 0, H);
+        if (L.isSnow) { g.addColorStop(0, '#fff'); g.addColorStop(1, '#e0f7fa'); }
+        else if (L.isJungle) { g.addColorStop(0, '#234a17'); g.addColorStop(1, '#112b0a'); }
+        else if (L.isVolcano) { g.addColorStop(0, '#292929'); g.addColorStop(1, '#050505'); }
+        else if (L.isMoon) { g.addColorStop(0, '#555'); g.addColorStop(1, '#111'); }
+        else if (L.isJourney) { g.addColorStop(0, `hsl(${(camX * .02 + 180) % 360},70%,50%)`); g.addColorStop(1, `hsl(${(camX * .02 + 180) % 360},80%,20%)`); }
+        else { g.addColorStop(0, '#3FAE63'); g.addColorStop(1, '#2C8A4C'); }
+        ctx.fillStyle = g; ctx.fill();
+
+        ctx.beginPath();
+        for (let sx = -10; sx <= W + 10; sx += 8) { const y = terrainY(sx + camX) + 5; sx === -10 ? ctx.moveTo(sx, y) : ctx.lineTo(sx, y); }
+        ctx.lineWidth = 7;
+        if (L.isSnow) { ctx.strokeStyle = '#b2ebf2'; }
+        else if (L.isJungle) { ctx.strokeStyle = '#523a23'; }
+        else if (L.isVolcano) { ctx.lineWidth = 9; ctx.strokeStyle = '#ff3300'; ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 10; }
+        else if (L.isMoon) { ctx.strokeStyle = '#888'; }
+        else if (L.isJourney) { ctx.strokeStyle = `hsl(${(camX * .02 + 90) % 360},80%,80%)`; }
+        else { ctx.strokeStyle = '#5B4636'; }
+        ctx.stroke(); ctx.shadowBlur = 0;
+
+        if (!L.isVolcano && !L.isMoon) {
+          ctx.setLineDash([16, 14]); ctx.lineDashOffset = -camX;
+          ctx.beginPath();
+          for (let sx = -10; sx <= W + 10; sx += 8) { const y = terrainY(sx + camX) + 4; sx === -10 ? ctx.moveTo(sx, y) : ctx.lineTo(sx, y); }
+          ctx.lineWidth = 2; ctx.strokeStyle = L.isJungle ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.55)'; ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+      function drawFinishFlag() {
+        const sx = FINISH_X - camX;
+        if (sx < -100 || sx > W + 100) return;
+        const gy = terrainY(FINISH_X);
+        ctx.strokeStyle = '#1E1F2E'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(sx, gy); ctx.lineTo(sx, gy - 130); ctx.stroke();
+        for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
+          ctx.fillStyle = (r + c) % 2 === 0 ? '#1E1F2E' : '#FFF8EC';
+          ctx.fillRect(sx + c * (48 / 6), gy - 130 + r * (32 / 4), 48 / 6, 32 / 4);
+        }
+        const t = performance.now() * .004;
+        ['#c471ed', '#FFD23F', '#7FC8A9'].forEach((col, i) => {
+          const sway = Math.sin(t + i) * 10;
+          ctx.strokeStyle = col; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(sx, gy - 128 + i * 4); ctx.quadraticCurveTo(sx + 30 + sway, gy - 118 + i * 10, sx + 50 + sway * 1.4, gy - 100 + i * 16); ctx.stroke();
+        });
+      }
+      function drawSpeedLines() {
+        if (!car.grounded || Math.abs(car.vx) < 6.5) return;
+        const sx = car.x - camX;
+        ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3;
+        for (let i = 0; i < 4; i++) {
+          const lx = sx - V.wheelBase / 2 - 16 - i * 14, ly = car.y - V.wheelR - 12 - i * 7;
+          ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - 16, ly); ctx.stroke();
+        }
+      }
+      function drawCarInWorld() {
+        const sx = car.x - camX;
+        ctx.save(); ctx.translate(sx, car.y - V.wheelR - 6);
+        const airGap = Math.max(0, terrainY(car.x) - car.y);
+        ctx.save(); ctx.rotate(-car.angle);
+        const ss = Math.max(.45, 1 - airGap * .01);
+        ctx.fillStyle = `rgba(0,0,0,${.2 * ss})`; ctx.beginPath(); ctx.ellipse(0, V.wheelR + 10 + airGap, 34 * ss, 7 * ss, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        drawVehicleShape(ctx, V, car.angle, car.wheelRot, car.squash, 1);
+        ctx.restore();
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+        ctx.save();
+        if (camShake > .3) ctx.translate((Math.random() - .5) * camShake, (Math.random() - .5) * camShake);
+        drawSky(); drawSkyBalloons(); drawFarHills(); drawGround();
+        drawDecor(); drawRamps(); drawObstacles(); drawFinishFlag();
+        drawPolaroids(); drawFuelCans();
+        drawSpeedLines(); drawCarInWorld(); drawSparks(); drawDust();
+        ctx.restore();
+        drawDials();
+      }
+
+      // ============================================================
+      // §10  INSTRUMENTS & HUD
+      // ============================================================
+      const dialsCanvas = document.getElementById('dials-canvas');
+      const sctx = dialsCanvas.getContext('2d');
+
+      function drawDial(cx, cy, r, valPct, label) {
+        sctx.save();
+        sctx.beginPath(); sctx.arc(cx, cy, r, 0, Math.PI * 2);
+        sctx.fillStyle = 'rgba(30,31,46,.85)'; sctx.fill();
+        sctx.lineWidth = 4; sctx.strokeStyle = '#aaa'; sctx.stroke();
+        const sA = Math.PI * .75, eA = Math.PI * 2.25;
+        for (let i = 0; i <= 10; i++) {
+          const a = sA + (eA - sA) * (i / 10);
+          sctx.strokeStyle = i % 5 === 0 ? '#fff' : 'rgba(255,255,255,.4)'; sctx.lineWidth = i % 5 === 0 ? 3 : 1.5;
+          sctx.beginPath(); sctx.moveTo(cx + Math.cos(a) * (r - 12), cy + Math.sin(a) * (r - 12)); sctx.lineTo(cx + Math.cos(a) * (r - 4), cy + Math.sin(a) * (r - 4)); sctx.stroke();
+        }
+        const na = sA + (eA - sA) * valPct;
+        sctx.strokeStyle = '#c471ed'; sctx.lineWidth = 4; sctx.lineCap = 'round';
+        sctx.beginPath(); sctx.moveTo(cx, cy); sctx.lineTo(cx + Math.cos(na) * (r - 18), cy + Math.sin(na) * (r - 18)); sctx.stroke();
+        sctx.fillStyle = '#ccc'; sctx.beginPath(); sctx.arc(cx, cy, 6, 0, Math.PI * 2); sctx.fill();
+        sctx.fillStyle = '#c471ed'; sctx.font = "700 14px 'Baloo 2',cursive"; sctx.textAlign = 'center'; sctx.fillText(label, cx, cy + 30);
+        sctx.restore();
+      }
+      function drawDials() {
+        if (!started) return;
+        sctx.clearRect(0, 0, 300, 150);
+        const speedPct = Math.max(0, Math.min(1, Math.abs(car.vx) / V.maxSpeed));
+        drawDial(75, 75, 60, (speedPct * 4) % 1, 'RPM');
+        drawDial(225, 75, 60, gasHeld && car.fuel > 0 && car.grounded ? .8 + Math.random() * .1 : .1, 'BOOST');
+      }
+
+      const distanceEl = document.getElementById('distance-val');
+      const fuelFillEl = document.getElementById('fuel-fill');
+      function updateHud() {
+        distanceEl.textContent = `${Math.floor(car.x / 10)}m / ${Math.floor(FINISH_X / 10)}m`;
+        const fp = Math.max(0, Math.min(1, car.fuel / 100));
+        fuelFillEl.style.transform = `scaleX(${fp})`;
+        fuelFillEl.style.background = fp > .25 ? 'linear-gradient(90deg,#A8E010,#73A000)' : 'linear-gradient(90deg,#E63946,#9E1F2A)';
+      }
+
+      // ============================================================
+      // §11  GAME LOOP
+      // ============================================================
+      let lastFrameTime = performance.now();
+      function loop(now) {
+        const dt = Math.min(.05, Math.max(0, (now - lastFrameTime) / 1000));
+        lastFrameTime = now;
+        update(dt); render();
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+
+      // ============================================================
+      // §12  INPUT CONTROLS
+      // ============================================================
+      const gasBtn = document.getElementById('gas-btn');
+      const brakeBtn = document.getElementById('brake-btn');
+
+      function bindHold(el, onDown, onUp) {
+        el.addEventListener('pointerdown', e => {
+          e.preventDefault(); onDown(); el.classList.add('pressed');
+        });
+        el.addEventListener('pointerup', () => { onUp(); el.classList.remove('pressed'); });
+        el.addEventListener('pointerleave', () => { onUp(); el.classList.remove('pressed'); });
+        el.addEventListener('pointercancel', () => { onUp(); el.classList.remove('pressed'); });
+      }
+      bindHold(gasBtn, () => gasHeld = true, () => gasHeld = false);
+      bindHold(brakeBtn, () => brakeHeld = true, () => brakeHeld = false);
+
+      window.addEventListener('keydown', e => {
+        if (e.code === 'ArrowRight' || e.code === 'Space') { gasHeld = true; e.preventDefault(); }
+        if (e.code === 'ArrowLeft') brakeHeld = true;
+      });
+      window.addEventListener('keyup', e => {
+        if (e.code === 'ArrowRight' || e.code === 'Space') gasHeld = false;
+        if (e.code === 'ArrowLeft') brakeHeld = false;
+      });
+
+      // ============================================================
+      // §13  AUDIO ENGINE
+      // ============================================================
+      let audioCtx = null, masterGain = null, engineOsc = null, engineGain = null, muted = false;
+
+      function ensureAudio() {
+        if (audioCtx) return;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGain = audioCtx.createGain(); masterGain.gain.value = .5; masterGain.connect(audioCtx.destination);
+          engineOsc = audioCtx.createOscillator(); engineOsc.type = 'sawtooth';
+          engineGain = audioCtx.createGain(); engineGain.gain.value = 0;
+          engineOsc.connect(engineGain); engineGain.connect(masterGain);
+          engineOsc.frequency.value = 60; engineOsc.start();
+        } catch (e) { audioCtx = null; }
+      }
+      function updateEngineSound() {
+        if (!audioCtx) return;
+        const speed = Math.abs(car.vx);
+        engineOsc.frequency.setTargetAtTime(55 + speed * 16, audioCtx.currentTime, .05);
+        const targetGain = started && !finished ? Math.min(.09, .02 + speed * .006) : 0;
+        engineGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, .08);
+      }
+      function playTone(freq, duration, type, vol, delay) {
+        if (!audioCtx) return;
+        const t0 = audioCtx.currentTime + (delay || 0);
+        const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+        osc.type = type || 'sine'; osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol != null ? vol : .18, t0 + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + duration);
+        osc.connect(g); g.connect(masterGain); osc.start(t0); osc.stop(t0 + duration + .02);
+      }
+      function playCollectChime() { playTone(880, .12, 'sine', .15); playTone(1320, .14, 'sine', .12, .06); }
+      function playRampWhoosh() { playTone(220, .22, 'sawtooth', .1); playTone(440, .18, 'sine', .08, .05); }
+      function playFinishFanfare() {
+        // Happy Birthday to You tune via Web Audio API!
+        const hbd = [
+          [261.63, 0.25, 0],       // Hap-
+          [261.63, 0.25, 0.28],    // py
+          [293.66, 0.45, 0.56],    // birth-
+          [261.63, 0.45, 1.05],    // day
+          [349.23, 0.45, 1.54],    // to
+          [329.63, 0.75, 2.03],    // you!
+
+          [261.63, 0.25, 2.90],    // Hap-
+          [261.63, 0.25, 3.18],    // py
+          [293.66, 0.45, 3.46],    // birth-
+          [261.63, 0.45, 3.95],    // day
+          [392.00, 0.45, 4.44],    // to
+          [349.23, 0.85, 4.93]     // you!
+        ];
+        hbd.forEach(([f, d, t]) => playTone(f, d, 'triangle', 0.22, t));
+      }
+      function playThud(vol) { if (!audioCtx) return; playTone(90, .14, 'sine', .08 + vol * .1); }
+
+      const MUSIC_NOTES = [523.25, 587.33, 659.25, 783.99, 880, 783.99, 659.25, 587.33];
+      let musicPlaying = false, musicIndex = 0, musicTimer = null;
+      function scheduleMusicNote() {
+        if (!musicPlaying) return;
+        playTone(MUSIC_NOTES[musicIndex % MUSIC_NOTES.length], .4, 'triangle', .045);
+        if (musicIndex % 4 === 0) playTone(MUSIC_NOTES[musicIndex % MUSIC_NOTES.length] / 2, .4, 'sine', .03);
+        musicIndex++;
+        musicTimer = setTimeout(scheduleMusicNote, 340);
+      }
+      function startMusic() { if (musicPlaying || !audioCtx) return; musicPlaying = true; musicIndex = 0; scheduleMusicNote(); }
+      function stopMusic() { musicPlaying = false; clearTimeout(musicTimer); }
+
+      document.getElementById('mute-btn').addEventListener('click', () => {
+        muted = !muted;
+        if (masterGain) masterGain.gain.value = muted ? 0 : .5;
+        document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+      });
+
+      // ============================================================
+      // §14  UI HELPERS — TOASTS & ESCAPE
+      // ============================================================
+      const toastEl = document.getElementById('gift-toast');
+      let toastTimer = null;
+      function showToast(msg) {
+        toastEl.textContent = '🎁 ' + msg; toastEl.classList.remove('hidden');
+        requestAnimationFrame(() => toastEl.classList.add('show'));
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toastEl.classList.remove('show'); setTimeout(() => toastEl.classList.add('hidden'), 300); }, 2200);
+      }
+      function escHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+      function renderMessagesRecap(el) {
+        el.style.maxHeight = '250px'; el.style.overflowY = 'auto'; el.style.paddingRight = '8px';
+        el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+          FINAL_MESSAGES.map(m => `<div style="background:linear-gradient(180deg,#333,#222);border-left:4px solid #c471ed;padding:12px;border-radius:8px;text-align:left;color:#fff;font-size:15px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.5);">✉️ ${escHtml(m)}</div>`).join('') +
+          '</div>';
+      }
+
+      // ============================================================
+      // §15  GARAGE UI — VEHICLE CAROUSEL & STAGE TABS
+      // ============================================================
+      let carouselIndex = VEHICLES.findIndex(v => v.id === selectedVehicleId);
+      if (carouselIndex < 0) carouselIndex = 0;
+
+      const carouselCanvas = document.getElementById('carousel-canvas');
+      const carouselCtx = carouselCanvas.getContext('2d');
+      const carouselVName = document.getElementById('carousel-vname');
+      const carouselVBlurb = document.getElementById('carousel-vblurb');
+      const statSpeed = document.getElementById('stat-speed');
+      const statGrip = document.getElementById('stat-grip');
+      const statBounce = document.getElementById('stat-bounce');
+      const carouselActionBtn = document.getElementById('carousel-action-btn');
+
+      function updateCarousel() {
+        const v = VEHICLES[carouselIndex];
+        carouselVName.textContent = v.name;
+        carouselVBlurb.textContent = v.blurb;
+        statSpeed.style.width = (v.stats.speed * 100) + '%';
+        statGrip.style.width = (v.stats.grip * 100) + '%';
+        statBounce.style.width = (v.stats.bounce * 100) + '%';
+        if (selectedVehicleId === v.id) {
+          carouselActionBtn.textContent = 'SELECTED ✓';
+          carouselActionBtn.className = 'unlock-btn selected';
+        } else {
+          carouselActionBtn.textContent = 'SELECT';
+          carouselActionBtn.className = 'unlock-btn';
+        }
+        carouselCtx.clearRect(0, 0, 300, 150);
+        carouselCtx.save(); carouselCtx.translate(150, 110);
+        if (v.bodyImgSrc && !imageCache[v.bodyImgSrc]) {
+          setTimeout(() => { carouselCtx.clearRect(-150, -110, 300, 150); drawVehicleShape(carouselCtx, v, -0.05, 0, 1, 1.8); }, 150);
+        } else {
+          drawVehicleShape(carouselCtx, v, -0.05, 0, 1, 1.8);
+        }
+        carouselCtx.restore();
+      }
+
+      document.getElementById('prev-vehicle-btn').addEventListener('click', () => { carouselIndex = (carouselIndex - 1 + VEHICLES.length) % VEHICLES.length; updateCarousel(); });
+      document.getElementById('next-vehicle-btn').addEventListener('click', () => { carouselIndex = (carouselIndex + 1) % VEHICLES.length; updateCarousel(); });
+      carouselActionBtn.addEventListener('click', () => { const v = VEHICLES[carouselIndex]; if (selectedVehicleId === v.id) return; selectedVehicleId = v.id; updateCarousel(); });
+
+      function loadVehicleImages() {
+        let pending = 0;
+        const done = () => { if (--pending <= 0) updateCarousel(); };
+        VEHICLES.forEach(v => {
+          [v.bodyImgSrc, v.wheelImgSrc].forEach(src => {
+            if (!src || src === 'none' || imageCache[src]) return;
+            pending++;
+            const img = new Image();
+            img.onload = done;
+            img.onerror = done;
+            img.src = src;
+            imageCache[src] = img;
+          });
+        });
+        ['assets/driver.png'].forEach(src => {
+          if (!imageCache[src]) {
+            pending++; const img = new Image(); img.onload = done; img.onerror = done; img.src = src; imageCache[src] = img;
+          }
+        });
+        if (pending === 0) updateCarousel();
+      }
+      loadVehicleImages();
+
+      // Tabs
+      const tabStage = document.getElementById('tab-stage');
+      const tabVehicle = document.getElementById('tab-vehicle');
+      const menuContentStage = document.getElementById('menu-content-stage');
+      const menuContentVehicle = document.getElementById('menu-content-vehicle');
+      const menuHeaderText = document.getElementById('menu-header-text');
+
+      tabStage.addEventListener('click', () => {
+        tabStage.classList.add('active'); tabVehicle.classList.remove('active');
+        menuContentStage.classList.add('active'); menuContentVehicle.classList.remove('active');
+        menuHeaderText.textContent = 'STAGE';
+      });
+      tabVehicle.addEventListener('click', () => {
+        tabVehicle.classList.add('active'); tabStage.classList.remove('active');
+        menuContentVehicle.classList.add('active'); menuContentStage.classList.remove('active');
+        menuHeaderText.textContent = 'VEHICLE';
+      });
+
+      // Stage rows
+      const levelRow = document.getElementById('level-row');
+      function buildLevelRow() {
+        levelRow.innerHTML = '';
+        LEVELS.forEach(lv => {
+          const unlocked = unlockedLevels.has(lv.id);
+          const btn = document.createElement('div');
+          btn.className = 'stage-btn' + (lv.id === selectedLevelId ? ' active' : '') + (unlocked ? '' : ' locked');
+          btn.innerHTML = `<span class="stage-emoji">${lv.emoji}</span><span class="stage-name">${lv.name}</span>`;
+          btn.addEventListener('click', () => {
+            if (!unlocked) { showToast(`Finish an earlier stage to unlock ${lv.name}!`); return; }
+            selectedLevelId = lv.id; buildLevelRow();
+          });
+          levelRow.appendChild(btn);
+        });
+      }
+      buildLevelRow();
+
+      // ============================================================
+      // §16  GAME FLOW — START, FINISH, TIME UP
+      // ============================================================
+      const mainMenuOverlay = document.getElementById('main-menu-overlay');
+      const finishOverlay = document.getElementById('finish-overlay');
+      const timeupOverlay = document.getElementById('timeup-overlay');
+      const hudEl = document.getElementById('hud');
+      const dialsWrap = document.getElementById('dials-wrap');
+      const muteBtn = document.getElementById('mute-btn');
+      const keyhintEl = document.getElementById('keyhint');
+
+      function showGameHUD(show) {
+        [hudEl, dialsWrap, muteBtn, gasBtn, brakeBtn, keyhintEl].forEach(el => {
+          el.classList.toggle('hidden', !show);
+        });
+      }
+
+      function beginRide() {
+        V = VEHICLES_BY_ID[selectedVehicleId];
+        const lv = LEVELS.find(l => l.id === selectedLevelId) || LEVELS[0];
+        FINISH_X = lv.finishX;
+        levelAmpMult = lv.ampMult;
+        levelSeedShift = lv.seedShift || 0;
+
+        Object.assign(car, { x: START_X, vx: 0, vy: 0, angle: 0, squash: 1, grounded: true, fuel: 100 });
+        car.y = terrainY(START_X);
+        camX = 0; camShake = 0; maxAirGap = 0; polaroidsCollected = 0; finished = false;
+        sparks = []; dust = [];
+        sparks = []; dust = [];
+        nextMilestoneIdx = 0; messagePaused = false; msgOverlay.classList.add('hidden');
+
+        buildPolaroids(); TOTAL_POLAROIDS = polaroids.length;
+        buildFuelCans(); buildRamps(); buildObstacles();
+
+        [mainMenuOverlay, finishOverlay, timeupOverlay].forEach(el => el.classList.add('hidden'));
+        showGameHUD(true);
+        ensureAudio(); startMusic(); started = true;
+      }
+
+      document.getElementById('start-btn').addEventListener('click', beginRide);
+      document.getElementById('replay-btn').addEventListener('click', beginRide);
+      document.getElementById('timeup-retry-btn').addEventListener('click', beginRide);
+      document.getElementById('takeoff-btn').addEventListener('click', () => {
+        document.getElementById('boarding-pass-overlay').classList.add('hidden');
+      });
+
+      function goSwitchVehicle() {
+        stopConfetti(); stopMusic(); buildLevelRow();
+        [finishOverlay, timeupOverlay].forEach(el => el.classList.add('hidden'));
+        showGameHUD(false);
+        started = false;
+        mainMenuOverlay.classList.remove('hidden');
+      }
+      document.getElementById('finish-switch-btn').addEventListener('click', goSwitchVehicle);
+      document.getElementById('timeup-switch-btn').addEventListener('click', goSwitchVehicle);
+
+      function computeAchievements() {
+        const badges = [];
+        const allGifts = polaroidsCollected === TOTAL_POLAROIDS && TOTAL_POLAROIDS > 0;
+        if (allGifts) badges.push('🎂 Sabko dhundh ke maara!');
+        if (allGifts && maxAirGap > 90) badges.push('👑 Pro Bestie Driver!');
+        if (maxAirGap > 90) badges.push('🪂 Udne wali Annu');
+        if (!allGifts && TOTAL_POLAROIDS > 0 && polaroidsCollected >= TOTAL_POLAROIDS / 2) badges.push('🎉 Party Mode On');
+        return badges;
+      }
+
+      function finishRide() {
+        finished = true; car.x = FINISH_X; stopMusic(); showGameHUD(false);
+        document.getElementById('final-candles').textContent = polaroidsCollected;
+        document.getElementById('final-total').textContent = TOTAL_POLAROIDS;
+        renderMessagesRecap(document.getElementById('messages-recap'));
+        document.getElementById('achievements-row').innerHTML = computeAchievements().map(b => `<span class="badge-chip">${b}</span>`).join('');
+
+        const idx = LEVELS.findIndex(l => l.id === selectedLevelId);
+        if (idx >= 0 && idx + 1 < LEVELS.length && !unlockedLevels.has(LEVELS[idx + 1].id)) {
+          unlockedLevels.add(LEVELS[idx + 1].id);
+          setTimeout(() => showToast('🔓 New stage unlocked: ' + LEVELS[idx + 1].name + '!'), 900);
+        }
+        buildLevelRow();
+        finishOverlay.classList.remove('hidden');
+        launchConfetti(); playFinishFanfare();
+      }
+
+      function triggerTimeUp(msg) {
+        finished = true; stopMusic(); showGameHUD(false);
+        document.getElementById('timeup-sub').textContent = msg ||
+          `${Math.round(((car.x - START_X) / (FINISH_X - START_X)) * 100)}% tak pahunchi aur ${polaroidsCollected} baar Deepak ko maara! Ek aur try de 😂`;
+        renderMessagesRecap(document.getElementById('timeup-messages'));
+        timeupOverlay.classList.remove('hidden');
+      }
+
+      // ============================================================
+      // §17  BIRTHDAY LETTERS FOR ANNU
+      // ============================================================
+      const LONG_LETTERS = [
+        "Annu yaar,\n\nHappiest Birthday! \u{1F382}\n\nSabse pehle ek clarification — bhoola nahi tha tera birthday! Pichle saal jo banaya tha tere liye, bas wo de nahi paya tha. Aur wo baat mere dil me reh gayi thi.\n\nIsliye is saal socha ki kuch aisa karunga jo tu hamesha yaad rakhegi. Ye poora game tere liye banaya h. Har ek line, har ek message — sab kuch tere liye h.\n\nSamajh le pichle saal ki poori bharpai ki kosish ki h isme. \u{1F49C}",
+
+        "Tujhe pta h na humari dosti kaise h — koi filter nhi hota. Jo mann me aaye wo bol dete h.\n\nKabhi tu mujhe daant deti h, kabhi me tujhe pagal bolta hu. Par end me hum dono ko pta h ki koi farak nhi padta in sab se.\n\nTu meri un logon me se h jinke saath me apna actual wala me hu. Koi acting nhi, koi pretend nhi.\n\nOr yaar ye cheez bohot rare h. Mujhe iska bohot value h, even agar me kabhi bol nhi pata dhang se. \u{1F90D}",
+
+        "Chal ab serious baat —\n\nTu bohot strong h Annu, tujhe shayad khud nhi pta kitni. Jo cheezein tu handle karti h, jaise tu logon ka saath deti h, jaise tu apni life manage karti h — it's genuinely impressive.\n\nBas ek hi complaint h — apna thoda khayal rakh liya kar. Tu sabka soochti h par khud ke baare me bhool jaati h.\n\nIs saal ye change hona chahiye. Deal? \u{1F91D}",
+
+        "Or sun — ye ek poem likhi h tere liye (haan mene likhi h, judge mat karna \u{1F602})\n\n\u{1F338} \u{2500}\u{2500}\u{2500} \u{2500}\u{2500}\u{2500} \u{2500}\u{2500}\u{2500} \u{1F338}\n\nBirthday aaya tera, dil me h khushi,\nPichle saal jo reh gaya tha, ab h shuruvaat nyi.\n\nTu hasti h toh lagta h sab sahi h,\nMeri is bestie me yaar koi kami nhi.\n\nDrama tera, masti teri, sab h special,\nTere bina mere din hote boring aur feekal.\n\nIs saal ka toh poora hisaab chukana tha,\nJo pichle saal reh gaya, wo is game se batana tha.\n\n\u{1F338} \u{2500}\u{2500}\u{2500} \u{2500}\u{2500}\u{2500} \u{2500}\u{2500}\u{2500} \u{1F338}\n\n(Haan pta h poet nhi hu, par effort toh dekh \u{1F602}\u{1F49C})",
+
+        "Aur last me ye tere liye wish list h —\n\n\u{1F338} Bohot saari khushiyan mile tujhe is saal\n\u{1F355} Khana unlimited mile, calories zero ho\n\u{1F602} Itna hase ki pet dukh jaaye\n\u{1F4AA} Stress bilkul zero ho\n\u{1F49C} Jitna pyaar tu sabko deti h, usse dugna tujhe mile\n\nOr haan — birthday treat toh officially meri taraf se pakka h! Jab bole tab, bill mera. \u{1F370}\u{1F355}\n\nHappy Birthday Annu.\nTu hamesha aise hi rhe — drama queen, bestie, or sabse acchi insaan. \u{1FAF6}\n\n— Tera Deepak \u{1F49C}"
+      ];
+      let currentLetterIdx = 0;
+
+      // Scratch-off mechanics
+      let scratchCanvas = null;
+      let scratchCtx = null;
+      let isScratching = false;
+      let scratchPercent = 0;
+
+      document.getElementById('open-letters-btn').addEventListener('click', () => {
+        document.getElementById('letters-overlay').classList.remove('hidden');
+        currentLetterIdx = 0; renderLetters();
+      });
+
+      function renderLetters() {
+        const container = document.getElementById('letters-container');
+        container.innerHTML = '';
+        if (scratchCanvas) { scratchCanvas.remove(); scratchCanvas = null; }
+
+        LONG_LETTERS.forEach((text, i) => {
+          const card = document.createElement('div');
+          card.className = 'letter-card';
+          if (i === currentLetterIdx) card.classList.add('active');
+          else if (i < currentLetterIdx) card.classList.add('prev');
+
+          card.innerHTML = text.split('\n').map(p => p.trim() ? `<p style="margin-bottom:15px;">${escHtml(p)}</p>` : '').join('');
+
+          // Final letter scratch-off setup
+          if (i === LONG_LETTERS.length - 1 && i === currentLetterIdx) {
+            scratchCanvas = document.createElement('canvas');
+            scratchCanvas.style.position = 'absolute';
+            scratchCanvas.style.inset = '0';
+            scratchCanvas.style.width = '100%';
+            scratchCanvas.style.height = '100%';
+            scratchCanvas.style.borderRadius = '20px';
+            scratchCanvas.style.zIndex = '5';
+            card.appendChild(scratchCanvas);
+
+            setTimeout(initScratchOff, 50);
+          }
+
+          container.appendChild(card);
+        });
+        document.getElementById('btn-prev-letter').disabled = currentLetterIdx === 0;
+        const nextBtn = document.getElementById('btn-next-letter');
+        nextBtn.textContent = currentLetterIdx === LONG_LETTERS.length - 1 ? 'Close ✖' : 'Next ➡';
+      }
+
+      function initScratchOff() {
+        if (!scratchCanvas) return;
+        scratchCanvas.width = scratchCanvas.offsetWidth;
+        scratchCanvas.height = scratchCanvas.offsetHeight;
+        scratchCtx = scratchCanvas.getContext('2d');
+
+        // Draw silver foil
+        scratchCtx.fillStyle = '#b0b0b0';
+        scratchCtx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+        scratchCtx.font = '24px "Baloo 2"';
+        scratchCtx.fillStyle = '#333';
+        scratchCtx.textAlign = 'center';
+        scratchCtx.fillText("SCRATCH KARO ANNU! 🎁", scratchCanvas.width / 2, scratchCanvas.height / 2);
+
+        scratchCtx.globalCompositeOperation = 'destination-out';
+
+        const scratchStart = (e) => { isScratching = true; scratchMove(e); };
+        const scratchStop = () => { isScratching = false; checkScratch(); };
+        const scratchMove = (e) => {
+          if (!isScratching) return;
+          const rect = scratchCanvas.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          const x = clientX - rect.left;
+          const y = clientY - rect.top;
+          scratchCtx.beginPath();
+          scratchCtx.arc(x, y, 25, 0, Math.PI * 2);
+          scratchCtx.fill();
+          if (Math.random() < 0.1) spawnSparks(clientX, clientY); // add sparks effect!
+        };
+
+        scratchCanvas.addEventListener('mousedown', scratchStart);
+        scratchCanvas.addEventListener('mousemove', scratchMove);
+        window.addEventListener('mouseup', scratchStop);
+        scratchCanvas.addEventListener('touchstart', scratchStart, { passive: true });
+        scratchCanvas.addEventListener('touchmove', scratchMove, { passive: true });
+        window.addEventListener('touchend', scratchStop);
+      }
+
+      function checkScratch() {
+        if (!scratchCtx || !scratchCanvas) return;
+        const pixels = scratchCtx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height).data;
+        let cleared = 0;
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i] === 0) cleared++;
+        }
+        const percent = cleared / (pixels.length / 4);
+        if (percent > 0.45) {
+          scratchCanvas.style.transition = 'opacity 0.5s ease';
+          scratchCanvas.style.opacity = '0';
+          setTimeout(() => { if (scratchCanvas) scratchCanvas.remove(); }, 500);
+        }
+      }
+
+      document.getElementById('btn-prev-letter').addEventListener('click', () => { if (currentLetterIdx > 0) { currentLetterIdx--; renderLetters(); } });
+      document.getElementById('btn-next-letter').addEventListener('click', () => {
+        if (currentLetterIdx < LONG_LETTERS.length - 1) { currentLetterIdx++; renderLetters(); }
+        else document.getElementById('letters-overlay').classList.add('hidden');
+      });
+
+      // ============================================================
+      // §18  CONFETTI
+      // ============================================================
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      const cctx = confettiCanvas.getContext('2d');
+      let confettiPieces = [], confettiRAF = null;
+
+      function launchConfetti() {
+        confettiCanvas.classList.remove('hidden');
+        confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight;
+        const colors = ['#c471ed', '#FFD23F', '#4CB963', '#7FC8A9', '#FFC1CC'];
+        confettiPieces = Array.from({ length: 140 }, () => ({
+          x: Math.random() * confettiCanvas.width, y: -20 - Math.random() * confettiCanvas.height,
+          w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, vy: 2 + Math.random() * 3, vx: (Math.random() - .5) * 2,
+          rot: Math.random() * Math.PI, vr: (Math.random() - .5) * .2, color: colors[Math.floor(Math.random() * colors.length)]
+        }));
+        (function step() {
+          cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          confettiPieces.forEach(p => {
+            p.y += p.vy; p.x += p.vx; p.rot += p.vr;
+            if (p.y > confettiCanvas.height + 20) { p.y = -20; p.x = Math.random() * confettiCanvas.width; }
+            cctx.save(); cctx.translate(p.x, p.y); cctx.rotate(p.rot);
+            cctx.fillStyle = p.color; cctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cctx.restore();
+          });
+          confettiRAF = requestAnimationFrame(step);
+        })();
+      }
+      function stopConfetti() { if (confettiRAF) cancelAnimationFrame(confettiRAF); confettiCanvas.classList.add('hidden'); }
+      window.addEventListener('resize', () => { if (!confettiCanvas.classList.contains('hidden')) { confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; } });
+
+    })();
+  </script>
+</body>
+
+</html>
